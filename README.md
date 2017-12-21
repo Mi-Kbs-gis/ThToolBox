@@ -4,20 +4,18 @@ QGIS Processing Toolbox of TLUG
 Algorithms:
 
 
-Vector Selection Tools
+Vector Selection Tools:
 
-  Find duplicates
-
-
-Raster Tools
-
-  Extract Raster Values to CSV
-  
-  Extract Raster Values to Point Layer
+-Find duplicates
 
 
-3D Tools
+Raster Tools:
 
-  Extract Min/Max Z-Values
-  
-  Force 2D & Extract Min/Max Z-Values
+-Extract Raster Values to CSV
+-Extract Raster Values to Point Layer
+
+
+3D Tools:
+
+-Extract Min/Max Z-Values
+-Force 2D & Extract Min/Max Z-Values
