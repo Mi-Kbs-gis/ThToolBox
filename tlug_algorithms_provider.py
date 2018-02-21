@@ -34,6 +34,7 @@ from processing.core.ProcessingConfig import Setting, ProcessingConfig
 
 from FindDuplicates import FindDuplicates
 from ExtractRasterValues import ExtractRasterValues
+from SampleRasterValues import SampleRasterValues
 from RasterToCSV import RasterToCSV
 from ExtractMinMaxZ import ExtractMinMaxZ
 from Force2dExtractMinMaxZ import Force2dExtractMinMaxZ
@@ -57,6 +58,7 @@ class TlugAlgorithmProvider(AlgorithmProvider):
         self.alglist.append(RasterToCSV())
         self.alglist.append(ExtractMinMaxZ())
         self.alglist.append(Force2dExtractMinMaxZ())
+        self.alglist.append(SampleRasterValues())
         
         for alg in self.alglist:
             alg.provider = self
