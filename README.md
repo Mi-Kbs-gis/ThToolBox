@@ -15,9 +15,16 @@ Raster Tools:
 
 -Extract Raster Values to Point Layer
 
+-Sample Raster Values to Point Layer
+
 
 3D Tools:
 
 -Extract Min/Max Z-Values
 
 -Force 2D & Extract Min/Max Z-Values
+
+
+Web Tools:
+
+-File Download
