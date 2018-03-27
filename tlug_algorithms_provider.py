@@ -38,6 +38,7 @@ from SampleRasterValues import SampleRasterValues
 from RasterToCSV import RasterToCSV
 from ExtractMinMaxZ import ExtractMinMaxZ
 from Force2dExtractMinMaxZ import Force2dExtractMinMaxZ
+from FileDownload import FileDownload
 
 from tlugUtils import tlugUtils
 
@@ -59,6 +60,7 @@ class TlugAlgorithmProvider(AlgorithmProvider):
         self.alglist.append(ExtractMinMaxZ())
         self.alglist.append(Force2dExtractMinMaxZ())
         self.alglist.append(SampleRasterValues())
+        self.alglist.append(FileDownload())
         
         for alg in self.alglist:
             alg.provider = self

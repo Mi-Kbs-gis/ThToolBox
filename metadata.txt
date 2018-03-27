@@ -10,8 +10,9 @@
 name=TLUG Processing
 qgisMinimumVersion=2.0
 description=TLUG Algorithms
-version=1.0
+version=1.2
 author=Michael Kürbs (TLUG Thüringen)
+email=michael.kuerbs@tlug.thueringen.de
 
 
 about=This is a Processing Algorithm Collection of TLUG (Thüringer Landesanstalt für Umwelt und Geologie)
@@ -26,7 +27,7 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=vector, duplicates, Raster, 3D, Z
+tags=vector, duplicates, Raster, 3D, Z, Download, Web
 
 homepage=https://github.com/Mi-Kbs-gis/TlugProcessing
 category=Analysis
