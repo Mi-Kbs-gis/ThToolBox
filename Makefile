@@ -1,11 +1,11 @@
 #/***************************************************************************
-# TlugProcessing
+# TlugProcessingPlugin
 #
 # TLUG Algorithms
 #							 -------------------
-#		begin				: 2017-10-25
+#		begin				: 2018-07-31
 #		git sha				: $Format:%H$
-#		copyright			: (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
+#		copyright			: (C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 #		email				: Michael.Kuerbs@tlug.thueringen.de
 # ***************************************************************************/
 #
@@ -38,13 +38,13 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	tlug_algorithms.py 
+	Tlug Processing Tools.py 
 
-PLUGINNAME = TlugProcessing
+PLUGINNAME = Tlug Processing Tools
 
 PY_FILES = \
 	__init__.py \
-	tlug_algorithms.py 
+	Tlug Processing Tools.py 
 
 UI_FILES = 
 
@@ -74,7 +74,7 @@ default: compile
 compile: $(COMPILED_RESOURCE_FILES)
 
 %.py : %.qrc $(RESOURCES_SRC)
-	pyrcc4 -o $*.py  $<
+	pyrcc5 -o $*.py  $<
 
 %.qm : %.ts
 	$(LRELEASE) $<
@@ -113,7 +113,7 @@ deploy: compile doc transcompile
 	cp -vfr i18n $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vfr $(HELP) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/help
 	# Copy extra directories if any
-  # (temporarily removed)
+	(foreach EXTRA_DIR,(EXTRA_DIRS), cp -R (EXTRA_DIR) (HOME)/(QGISDIR)/python/plugins/(PLUGINNAME)/;)
 
 
 # The dclean target removes compiled python files from plugin directory

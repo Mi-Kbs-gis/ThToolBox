@@ -22,13 +22,13 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2017-10-25'
-__copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2018-07-31'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load TlugProcessing class from file TlugProcessing.
+    """Load TlugProcessingPlugin class from file TlugProcessingPlugin.
 
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface

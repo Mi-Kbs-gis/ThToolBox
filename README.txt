@@ -1,10 +1,10 @@
 Plugin Builder Results
 
-Your plugin TlugProcessing was created in:
-    C:\Users\kuerbs\.qgis2\python\plugins\TlugProcessing
+Your plugin TlugProcessingPlugin was created in:
+    C:/Users/kuerbs/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins\tlugprocessingplugin
 
 Your QGIS plugin directory is located at:
-    C:/Users/kuerbs/.qgis2/python/plugins
+    C:/Users/kuerbs/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
 
 What's Next:
 
@@ -15,7 +15,7 @@ What's Next:
 
   * Test the plugin by enabling it in the QGIS plugin manager
 
-  * Customize it by editing the implementation file: ``tlug_algorithms.py``
+  * Customize it by editing the implementation file: ``Tlug Processing Tools.py``
 
   * You can use the Makefile to compile your Ui and resource files when
     you make changes. This requires GNU make (gmake)
@@ -23,5 +23,4 @@ What's Next:
 For more information, see the PyQGIS Developer Cookbook at:
 http://www.qgis.org/pyqgis-cookbook/index.html
 
-(C) 2011-2014 GeoApt LLC - geoapt.com
-Git revision : $Format:%H$
+(C) 2011-2018 GeoApt LLC - geoapt.com

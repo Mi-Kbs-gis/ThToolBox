@@ -7,15 +7,14 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=TLUG Processing
-qgisMinimumVersion=2.0
+name=TlugProcessing
+qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=1.2
-author=Michael Kürbs (TLUG Thüringen)
-email=michael.kuerbs@tlug.thueringen.de
+version=2.0.1
+author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
+email=Michael.Kuerbs@tlug.thueringen.de
 
-
-about=This is a Processing Algorithm Collection of TLUG (Thüringer Landesanstalt für Umwelt und Geologie)
+about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG).
 
 tracker=https://github.com/Mi-Kbs-gis/TlugProcessing
 repository=https://github.com/Mi-Kbs-gis/TlugProcessing
@@ -27,7 +26,7 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=vector, duplicates, Raster, 3D, Z, Download, Web
+tags=vector, duplicates, Raster, 3D, Z, Download, Web, Profil, Cross Section
 
 homepage=https://github.com/Mi-Kbs-gis/TlugProcessing
 category=Analysis

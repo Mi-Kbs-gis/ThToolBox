@@ -199,7 +199,7 @@ class FileDownload(GeoAlgorithm):
 
             progress.setPercentage(100.0 * i / self.vectorLayer.featureCount())
             if hasError==True:
-                print loopText
+                self.feedback.pushInfo( loopText )
             i=i+1
             
         del writer
@@ -213,7 +213,7 @@ class FileDownload(GeoAlgorithm):
         try:
             byteArray=reply.readAll()
         except:
-            print "Response emty"
+            self.feedback.pushInfo( "Response emty" )
             hasError=True
         
         if reply.error() == QNetworkReply.NoError and byteArray is not None:
@@ -222,19 +222,19 @@ class FileDownload(GeoAlgorithm):
             try:
                 #save Response in File
                 file=QFile(self.path + file_name)
-                print "FileSave: " + file_name
+                self.feedback.pushInfo("FileSave: " + file_name + " " +str(byteArray) )
                 file.open(QIODevice.WriteOnly)
                 file.write(byteArray)
                 file.close()
                 reply.deleteLater()
             except UnicodeEncodeError as err:
-                print "UnicodeEncodeError while saving File " +file_name+" "+str(err.args) + ";" + str(repr(err))
+                self.feedback.pushInfo( "UnicodeEncodeError while saving File " +file_name+" "+str(err.args) + ";" + str( repr( err ) ) )
                 hasError=True
             except IOError as e:
-                print "DP I/O error({0}): {1}".format(e.errno, e.strerror)+" "+file_name
+                self.feedback.pushInfo("DP I/O error({0}): {1}".format(e.errno, e.strerror)+" "+file_name )
                 hasError=True
             except Exception as err:
-                print "Error while saving File " + file_name + " " + str(err.args) + " " + str(repr(err)), reply.error()
+                self.feedback.pushInfo("Error while saving File " + file_name + " " + str(err.args) + " " + str(repr(err)) + " " + reply.error() )
                 hasError=True
         else:
             hasError=True
@@ -246,7 +246,7 @@ class FileDownload(GeoAlgorithm):
             request = QgsFeatureRequest(exp)
             self.vectorLayer.startEditing()
             for feature in self.vectorLayer.getFeatures(request):
-                print "Feature", feature.id(), "Download failed"
+                self.feedback.pushInfo( "Feature", feature.id(), "Download failed" )
                 
                 # reset Attributval of the new Feature
                 # fieldIndex=xxxLayer.fieldNameIndex(self.fieldNameFile)
