@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-
 """
 /***************************************************************************
  TlugProcessing
-                                 A QGIS plugin
+                                 TlugProcessingPlugin
  TLUG Algorithms
                               -------------------
         begin                : 2017-10-25
@@ -19,11 +18,12 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+ This script initializes the plugin, making it known to QGIS.
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2017-10-25'
-__copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2018-07-31'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
@@ -33,8 +33,8 @@ import os
 import sys
 import inspect
 
-from processing.core.Processing import Processing
-from tlug_algorithms_provider import TlugAlgorithmProvider
+from qgis.core import QgsProcessingAlgorithm, QgsApplication
+from .Tlug_algorithms_provider import TlugProcessingPluginProvider
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
@@ -42,13 +42,14 @@ if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
 
 
-class TlugProcessingPlugin:
+class TlugProcessingPlugin(object):
 
     def __init__(self):
-        self.provider = TlugAlgorithmProvider()
+        self.provider = TlugProcessingPluginProvider()
 
     def initGui(self):
-        Processing.addProvider(self.provider)
+        QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
-        Processing.removeProvider(self.provider)
+        QgsApplication.processingRegistry().removeProvider(self.provider)
+
