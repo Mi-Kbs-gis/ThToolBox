@@ -10,11 +10,11 @@
 name=TlugProcessing
 qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=2.0.1
+version=2.1
 author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 email=Michael.Kuerbs@tlug.thueringen.de
 
-about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG).
+about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG). \n\n Vector Seletion Tools\nProfile Coordinates
 
 tracker=https://github.com/Mi-Kbs-gis/TlugProcessing
 repository=https://github.com/Mi-Kbs-gis/TlugProcessing

@@ -41,6 +41,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterField,
                        QgsProject,
                        QgsFeature,
+                       QgsFeatureRequest,
                        QgsField,
                        QgsPoint,
                        QgsPointXY,
@@ -153,13 +154,13 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         #Basline Layer must have only 1 Feature
         if baseLineLayer.featureCount()==1:
         #baseLine must be the first feature
-            baseLineFeature=baseLineLayer.getFeature(0)
-            baseLine=baseLineLayer.getFeature(0).geometry()       
+            baseLineFeature=next(baseLineLayer.getFeatures(QgsFeatureRequest().setLimit(1)))
+            baseLine=baseLineFeature.geometry()
         elif len(baseLineLayer.selectedFeatures())==1:
             selection=baseLineLayer.selectedFeatures()
             #baseLine must be the first feature
-            baseLineFeature=selection[0]
-            baseLine=selection[0].geometry() 
+            baseLineFeature=next(selection)
+            baseLine=baseLineFeature.geometry() 
         else:
             msg = self.tr("Error: BaseLine layer needs exactly one line feature! ", baseLineLayer.featureCount(), "Just select one feature!")
             feedback.reportError(msg)

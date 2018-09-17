@@ -169,6 +169,12 @@ class FindDuplicates(QgsProcessingAlgorithm):
         """
         return 'Vector selection tools'
 
+    def metadata(self):
+        return self.tr('TLUG:Find Duplicates, Select duplicate values in a feature field.')
+
+    def description(self):
+        return self.tr('Processing', 'Select duplicate values in a feature field.')
+
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)
 

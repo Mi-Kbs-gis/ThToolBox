@@ -41,6 +41,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterNumber,
                        QgsProject,
                        QgsFeature,
+                       QgsFeatureRequest,
                        QgsField,
                        QgsPoint,
                        QgsPointXY,
@@ -107,7 +108,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.INPUTBUFFER,
-                self.tr('Baseline Buffer'),
+                self.tr('Baseline Buffer(used if no points selection)'),
                 type=QgsProcessingParameterNumber.Double,
                 defaultValue=100,
                 optional=False,
@@ -201,11 +202,13 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         #Basline Layer must have only 1 Feature
         if baseLineLayer.featureCount()==1:
         #baseLine must be the first feature
-            baseLine=baseLineLayer.getFeature(0).geometry()       
+            baseLineFeature=next(baseLineLayer.getFeatures(QgsFeatureRequest().setLimit(1)))
+            baseLine=baseLineFeature.geometry()
         elif len(baseLineLayer.selectedFeatures())==1:
             selection=baseLineLayer.selectedFeatures()
             #baseLine must be the first feature
-            baseLine=selection[0].geometry() 
+            baseLineFeature=next(selection)
+            baseLine=baseLineFeature.geometry() 
         else:
             msg = self.tr("Error: BaseLine layer needs exactly one line feature! " + str(baseLineLayer.featureCount()) + " Just select one feature!")
             feedback.reportError(msg)
@@ -326,6 +329,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
 
         # #create geometries as profil coordinates
         #profilFeatures=[]
+        iNewFeatures=0
         for current, srcFeat in enumerate(featuresWithZ):
             # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
@@ -340,33 +344,28 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                 #transform clip Geom to SrcLayer.crs Reverse
                 status=srcGeom.transform(trafo,QgsCoordinateTransform.ForwardTransform, False)
             #calc profile geometry
-            profilItems = self.extractProfilGeom(srcGeom, ueberhoehung, lp, feedback)
-            #feedback.pushInfo(str(status) + ": " + srcGeom.asWkt() + " : "+ srcOrgGeom.asWkt() + ": " + str(profilItems))
-            for profilItem in profilItems:
-                profilFeat = QgsFeature(srcFeat.fields())   
-                #muss fuer jeden Geometrityp gehen
-                profilFeat.setGeometry(profilItem.profilGeom)
-                attrs=srcFeat.attributes()
-                #add station and abstand
-                #if wkbTyp == QgsWkbTypes.Point:
-                attrs.append(profilItem.station)
-                attrs.append(profilItem.abstand)
-                profilFeat.setAttributes(attrs)
-                #profilFeatures.append(profilFeat)
-                # Add a feature in the sink
-                sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
-            
-            # if modus==1:
-            
-            # elif modus==2:
-            
+            profilItems, isGeomOnLine = self.extractProfilGeom(srcGeom, ueberhoehung, lp, feedback)
+            if isGeomOnLine == False:
+                feedback.pushInfo("Feature({0}) is not orthogonal to the Base Line: ".format( srcFeat.fid() ) + " " + srcGeom.asWkt())
+            else:
+                for profilItem in profilItems:
+                    profilFeat = QgsFeature(srcFeat.fields())   
+                    #muss fuer jeden Geometrityp gehen
+                    profilFeat.setGeometry(profilItem.profilGeom)
+                    attrs=srcFeat.attributes()
+                    #add station and abstand
+                    attrs.append(profilItem.station)
+                    attrs.append(profilItem.abstand)
+                    profilFeat.setAttributes(attrs)
+                    # Add a feature in the sink
+                    sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
+                    iNewFeatures=iNewFeatures+1
 
             # Update the progress bar
             feedback.setProgress(int(current * total))
         
 
-        #msgInfo=self.tr("{0} intersections where transformed to profile coordinates:").format(iFeat)
-        feedback.pushInfo("Ende")
+        feedback.pushInfo(str(iNewFeatures) +" transformed to profile coordinates.")
         # Return the results of the algorithm. In this case our only result is
         return {self.OUTPUT: dest_id}
 
@@ -473,34 +472,36 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         geometries = []
         profilItems=[]
         wkb=geom.asWkb() 
+        isOnBaseLine=True #is set to false if a geometry is not orthogonal to the bsaeLine
         #Umwandeln in OGR-Geometry um auf Z.Kooridnate zuzugreifen
         #geom_ogr = ogr.CreateGeometryFromWkb(wkb)
-        #print(geom.type(),geom.wkbType())#, str(ogr.GetGeometryType()))
         if "Point" in geom.asWkt(): #geom.type()==1: #Point
             if geom.isMultipart():
                 multiGeom = geom.asMultiPoint()
                 for i in multiGeom:
                     points=[]
                     for pxy in i:
-                        #print("alt", pxy.x(), pxy.y(), pxy.z())
                         station, abstand=laengsProfil.linearRef.transformToLineCoords(pxy)
                         if not station is None and not abstand is None:
                             ptProfil=QgsPointXY(station, pxy.z() * zFactor)
                             points.append(ptProfil)
-                    geometries.append(QgsGeometry().fromPointXY(points))
-                    item=ProfilItem(geom, QgsGeometry().fromPointXY(points), station, abstand, zFactor)
-                    profilItems.append(item)
+                        else:
+                            isOnBaseLine=False
+                    if isOnBaseLine==True:
+                        geometries.append(QgsGeometry().fromPointXY(points))
+                        item=ProfilItem(geom, QgsGeometry().fromPointXY(points), station, abstand, zFactor)
+                        profilItems.append(item)
             else:
                 pxy=geom.vertexAt(0)
-                #print(geom.wkbType(),"alt",geom.asWkt())
                 station, abstand=laengsProfil.linearRef.transformToLineCoords(pxy)
                 if not station is None and not abstand is None:
                     ptProfil=QgsPointXY(station, pxy.z() * zFactor)
-                    #points=[ptProfil]
                     #feedback.pushInfo("Profil_Multi: "+ str(ptProfil.x())+ " " + str(ptProfil.y()))
                     geometries.append(QgsGeometry().fromPointXY(ptProfil))
                     item=ProfilItem(geom, QgsGeometry().fromPointXY(ptProfil), station, abstand, zFactor)
                     profilItems.append(item)
+                else:
+                    isOnBaseLine=False
         elif "Line" in geom.asWkt(): #geom.type()==2: # Line
             if geom.isMultipart():
                 multiGeom = geom.asMultiPolyline()
@@ -516,14 +517,16 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                             firstStation = station
                             firstAbstand = abstand
                             isFirst=False
-                    
-                        ptProfil=QgsPointXY(station, pxy.z() * zFactor)
-                        #print(pxy,"-m->", ptProfil.asWkt())
-                        points.append(ptProfil)
-                    prLine=QgsGeometry().fromPolyline(points)
-                    geometries.append(prLine)
-                    item=ProfilItem(geom, prLine, firstStation, firstAbstand, zFactor)
-                    profilItems.append(item)
+                        if not station is None and not abstand is None:
+                            ptProfil=QgsPointXY(station, pxy.z() * zFactor)
+                            points.append(ptProfil)
+                        else:
+                            isOnBaseLine=False
+                    if isOnBaseLine==True:
+                        prLine=QgsGeometry().fromPolyline(points)
+                        geometries.append(prLine)
+                        item=ProfilItem(geom, prLine, firstStation, firstAbstand, zFactor)
+                        profilItems.append(item)
             else:# Single Feature
                 points=[]
                 isFirst=True
@@ -532,18 +535,22 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                 for pxy in geom.vertices():
 
                     station, abstand=laengsProfil.linearRef.transformToLineCoords(pxy)
-                    if isFirst:
-                        firstStation = station
-                        firstAbstand = abstand
-                        isFirst=False
-                    ptProfil=QgsPoint(station, pxy.z() * zFactor)
-                    #print(pxy,"-s->", ptProfil.asWkt())
-                    points.append(ptProfil)
-                    
-                prLine=QgsGeometry().fromPolyline(points)
-                geometries.append(prLine)
-                item=ProfilItem(geom, prLine, firstStation, firstAbstand, zFactor)
-                profilItems.append(item)
+                    if not station is None and not abstand is None:
+
+                        if isFirst:
+                            firstStation = station
+                            firstAbstand = abstand
+                            isFirst=False
+                        ptProfil=QgsPoint(station, pxy.z() * zFactor)
+                        #feedback.pushInfo("station: " +str( station ) + " pxy: " + str(pxy) +"-s->" + ptProfil.asWkt() + " zScale: " + str(zFactor) )
+                        points.append(ptProfil)
+                    else:
+                        isOnBaseLine=False
+                if isOnBaseLine==True:
+                    prLine=QgsGeometry().fromPolyline(points)
+                    geometries.append(prLine)
+                    item=ProfilItem(geom, prLine, firstStation, firstAbstand, zFactor)
+                    profilItems.append(item)
     
         elif "Polygon" in geom.asWkt(): # geom.type()==3: # Polygon
             if geom.isMultipart():
@@ -559,11 +566,15 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                             firstStation = station
                             firstAbstand = abstand
                             isFirst=False
-                        ptProfil=QgsPoint(station, pxy.z() * zFactor)
-                        points.append(QgsPoint(pxy.x(), pxy.y()))
-                    geometries.append(QgsGeometry().fromPolygon(points))
-                    item=ProfilItem(geom, QgsGeometry().fromPolygon(points), firstStation, firstAbstand, zFactor)
-                    profilItems.append(item)
+                        if not station is None and not abstand is None:
+                            ptProfil=QgsPoint(station, pxy.z() * zFactor)
+                            points.append(QgsPoint(pxy.x(), pxy.y()))
+                        else:
+                            isOnBaseLine=False
+                    if isOnBaseLine==True:
+                        geometries.append(QgsGeometry().fromPolygon(points))
+                        item=ProfilItem(geom, QgsGeometry().fromPolygon(points), firstStation, firstAbstand, zFactor)
+                        profilItems.append(item)
             else:# Single Feature
                 points=[]
                 isFirst=True
@@ -575,16 +586,19 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                         firstStation = station
                         firstAbstand = abstand
                         isFirst=False
-                    ptProfil=QgsPoint(station, pxy.z() * zFactor)
-                    points.append(QgsPoint(pxy.x(), pxy.y()))
-                geometries.append(QgsGeometry().fromPolygon(points))
-                item=ProfilItem(geom, QgsGeometry().fromPolygon(points), firstStation, firstAbstand, zFactor)
-                profilItems.append(item)
+                    if not station is None and not abstand is None:
+                        ptProfil=QgsPoint(station, pxy.z() * zFactor)
+                        points.append(QgsPoint(pxy.x(), pxy.y()))
+                    else:
+                        isOnBaseLine=False
+                if isOnBaseLine==True:
+                    geometries.append(QgsGeometry().fromPolygon(points))
+                    item=ProfilItem(geom, QgsGeometry().fromPolygon(points), firstStation, firstAbstand, zFactor)
+                    profilItems.append(item)
         else:
             feedback.pushnfo("def extractProfilGeom: Geometrietyp: "+str( geom.type())+str(geom.wkbType())+ geom.asWkt()+ " nicht zugeordnet")
-        #print("Single:", len(geometries), "Geometrien")
-        
-        return profilItems#geometries
+       
+        return profilItems, isOnBaseLine
 
     def hasZGeometries(self, vectorLayer, feedback):
         #feedback.pushInfo("hasZGeometries: ")

@@ -64,7 +64,7 @@ class TlugProcessingPluginProvider(QgsProcessingProvider):
         # Load algorithms
         self.alglist = []
         self.alglist.append( FindDuplicates() )
-        #self.alglist.append( FileDownload() ) # is not working on Qgis 3.x
+        self.alglist.append( FileDownload() ) # is not working on Qgis 3.x
         
         # tools TO PROFILE COORDINATES
         self.alglist.append( TransformToProfil_Gradient() )

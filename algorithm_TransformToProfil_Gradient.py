@@ -40,6 +40,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterNumber,
                        QgsProject,
                        QgsFeature,
+                       QgsFeatureRequest,
                        QgsField,
                        QgsPoint,
                        QgsPointXY,
@@ -131,13 +132,13 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
         #Basline Layer must have only 1 Feature
         if vectorLayer.featureCount()==1:
         #baseLine must be the first feature
-            baseLineFeature=vectorLayer.getFeature(0)
-            baseLine=vectorLayer.getFeature(0).geometry()       
+            baseLineFeature=next(vectorLayer.getFeatures(QgsFeatureRequest().setLimit(1)))
+            baseLine=baseLineFeature.geometry()
         elif len(vectorLayer.selectedFeatures())==1:
             selection=vectorLayer.selectedFeatures()
             #baseLine must be the first feature
-            baseLineFeature=selection[0]
-            baseLine=selection[0].geometry() 
+            baseLineFeature=next(selection)
+            baseLine=baseLineFeature.geometry() 
         else:
             msg = self.tr("Error: BaseLine layer needs exactly one line feature! ", vectorLayer.featureCount(), "Just select one feature!")
             feedback.reportError(msg)
