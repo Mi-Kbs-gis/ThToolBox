@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-09-17'
+__date__ = '2018-09-18'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -79,6 +79,7 @@ class FileDownload(QgsProcessingAlgorithm):
 
     INPUT_LAYER = 'INPUT_LAYER'
     FIELD = 'FIELD'
+    FIELDFILENAME='FIELDFILENAME'
     OUTPUT = 'OUTPUT'
     DOWNLOAD_DIR = 'DOWNLOAD_DIR'
     USE_NULL = 'USE_NULL'
@@ -117,6 +118,16 @@ class FileDownload(QgsProcessingAlgorithm):
             )
         )
         self.addParameter(
+            QgsProcessingParameterField(
+                self.FIELDFILENAME,
+                self.tr('Field with file names (must be unique!)'),
+                None,
+                self.INPUT_LAYER,
+                QgsProcessingParameterField.Any,
+                optional=True
+            )
+        )
+        self.addParameter(
             QgsProcessingParameterFolderDestination(
                 self.DOWNLOAD_DIR,
                 self.tr('Download Directory')
@@ -137,6 +148,8 @@ class FileDownload(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
         urlField = self.parameterAsString(parameters, self.FIELD, context)
+        fileNameField = self.parameterAsString(parameters, self.FIELDFILENAME, context)
+
         vectorLayer= self.parameterAsVectorLayer(parameters, self.INPUT_LAYER, context)
         self.path = self.parameterAsFile(parameters, self.DOWNLOAD_DIR, context)
 
@@ -146,6 +159,10 @@ class FileDownload(QgsProcessingAlgorithm):
             fields = vectorLayer.fields()
             urlFieldIndex = vectorLayer.fields().lookupField(urlField)
 
+        fileNameFileIndex=-1
+        if not fileNameField=="":
+            fileNameFileIndex = vectorLayer.fields().lookupField(fileNameField)
+            
         fields = vectorLayer.fields()
         fields.append(QgsField(self.fieldNamePath, QVariant.String))
         fields.append(QgsField(self.fieldNameFile, QVariant.String))
@@ -179,12 +196,11 @@ class FileDownload(QgsProcessingAlgorithm):
             geom = feature.geometry()
             self.url =str( feature[ urlFieldIndex ] )
             
-            file_name = self.url.split('/')[-1]
+
             contentType=None
-            #Replace Special Characters
-            file_name=file_name.replace(":","_")
+
             
-            loopText = str(i) +": "+ file_name +": "  + self.url
+            #loopText = str(i) +": "+ file_name +": "  + self.url
             if not str(self.url) == "" and not feature[ urlFieldIndex ] == None:
             
                 try:
@@ -193,6 +209,26 @@ class FileDownload(QgsProcessingAlgorithm):
                     
                     contentType=result.headers.get('Content-Type')
                     if result.status_code == 200:
+                        #get File type from Headers 'Content-Type'
+                        fileExt=""
+                        try:
+                            fileExt=contentType.split("/")[1]
+                        except Exception as err:
+                            fileExt="unkwown"
+                        #get File Name
+                        file_name=None
+                        if fileNameFileIndex > -1:
+                            file_name=str( feature[ fileNameFileIndex ] ) +'.'+ fileExt
+                        else:
+                            file_name = "File_" + str(i+1)+'.'+ fileExt
+
+                        #Replace Special Characters
+                        file_name=file_name.replace(":","_")
+                        file_name=file_name.replace("*","_")
+                        file_name=file_name.replace("\\","_")
+                        file_name=file_name.replace("/","_")
+
+                    
                         filePath=self.path + "\\" + file_name
                         if result:
                             with open(filePath, 'wb') as fd:

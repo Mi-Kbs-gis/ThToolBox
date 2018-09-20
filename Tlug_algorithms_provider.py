@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2018-09-19'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -37,6 +37,8 @@ from .algorithm_TransformToProfil_PolygonIntersection import TransformToProfil_P
 from .algorithm_TransformToProfil_Points import TransformToProfil_Points
 from .algorithm_TransformGeomFromProfileToRealWorld import TransformGeomFromProfileToRealWorld
 from .algorithm_FileDownload import FileDownload
+from .algorithm_WMSRipper import WmsRipper
+
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator, qVersion
 
 import os.path
@@ -64,7 +66,9 @@ class TlugProcessingPluginProvider(QgsProcessingProvider):
         # Load algorithms
         self.alglist = []
         self.alglist.append( FindDuplicates() )
-        self.alglist.append( FileDownload() ) # is not working on Qgis 3.x
+        self.alglist.append( FileDownload() )
+        self.alglist.append( WmsRipper() )
+
         
         # tools TO PROFILE COORDINATES
         self.alglist.append( TransformToProfil_Gradient() )
