@@ -40,7 +40,11 @@ Select a line feature or use an one feature layer as Baseline.
 ````
 ### Web
 
-#### Download per Feature
+#### Download by Features
+````
+Download from a feature attribute
+````
+#### Rip WMS by Features
 ````
 Download from a feature attribute
 ````
