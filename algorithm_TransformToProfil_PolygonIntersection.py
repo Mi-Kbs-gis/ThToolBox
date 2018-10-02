@@ -156,7 +156,8 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         elif len(baseLineLayer.selectedFeatures())==1:
             selection=baseLineLayer.selectedFeatures()
             #baseLine must be the first feature
-            baseLineFeature=next(selection)
+            selFeats=[f for f in selection]
+            baseLineFeature=selFeats[0]
             baseLine=baseLineFeature.geometry() 
         else:
             msg = self.tr("Error: BaseLine layer needs exactly one line feature! "+ str(baseLineLayer.featureCount()) + " Just select one feature!")

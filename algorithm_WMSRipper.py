@@ -264,7 +264,7 @@ class WmsRipper(QgsProcessingAlgorithm):
             fileExt = self.imageFormats[imageFormatIdx]
 
             if fileNameFileIndex > -1:
-                file_name = feature[fileNameFileIndex]
+                file_name = str(feature[fileNameFileIndex])
             else:
                 file_name = "WMS_Tile_"+ str( i+1 )
             contentType=None
@@ -284,7 +284,7 @@ class WmsRipper(QgsProcessingAlgorithm):
                     result = requests.get(url, stream=False)
                     
                     contentType=result.headers.get('Content-Type')
-                    feedback.pushInfo(str(i) + ' ('+str(contentType)+') ' + result.url)
+                    feedback.pushInfo(str(i) + ' ('+str(contentType)+') ' + url)
                     if result.status_code == 200:
                         filePath=self.path + "\\" + file_name + '.' + fileExt.lower()
                         #image = result.raw.read()
@@ -313,6 +313,7 @@ class WmsRipper(QgsProcessingAlgorithm):
                         outWld.close()
                         
                     else:
+                        hasError=True
                         feedback.pushInfo(str(i) + ": " + str(url) + "  HTTP Status Code:" + str(result.status_code) )
             
 
@@ -330,7 +331,7 @@ class WmsRipper(QgsProcessingAlgorithm):
             else:
                 #add String attributes to link the file
                 attrs.append( self.path + "\\")
-                attrs.append( file_name )
+                attrs.append( file_name + '.' + fileExt.lower() )
                 attrs.append( contentType )
             
 
@@ -379,7 +380,7 @@ class WmsRipper(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Rip WMS by Features'
+        return 'Store WMS images by Features'
 
     def displayName(self):
         """

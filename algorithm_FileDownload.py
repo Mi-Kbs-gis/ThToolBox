@@ -236,6 +236,7 @@ class FileDownload(QgsProcessingAlgorithm):
                                     fd.write(chunk)
                             fd.close()
                     else:
+                        hasError=True
                         feedback.pushInfo(str(i) + ": " + str(self.url) + "  HTTP Status Code:" + str(result.status_code) )
             
 
@@ -302,7 +303,7 @@ class FileDownload(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Download Per Feature'
+        return 'Download by Features'
 
     def displayName(self):
         """

@@ -10,7 +10,7 @@
 name=TlugProcessing
 qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=2.2
+version=2.2.1
 author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 email=Michael.Kuerbs@tlug.thueringen.de
 
@@ -23,7 +23,7 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=new algorithm "Download by feature", "Rip WMS by features"
+# changelog = Improvements on web and profile algorithms
 
 # Tags are comma separated with spaces allowed
 tags=vector, duplicates, Raster, 3D, Z, Download, Web, WMS, Profil, Cross Section

@@ -137,10 +137,11 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
         elif len(vectorLayer.selectedFeatures())==1:
             selection=vectorLayer.selectedFeatures()
             #baseLine must be the first feature
-            baseLineFeature=next(selection)
+            selFeats=[f for f in selection]
+            baseLineFeature=selFeats[0]
             baseLine=baseLineFeature.geometry() 
         else:
-            msg = self.tr("Error: BaseLine layer needs exactly one line feature! ", vectorLayer.featureCount(), "Just select one feature!")
+            msg = self.tr("Error: BaseLine layer needs exactly one line feature! "+ str(vectorLayer.featureCount()) + " Just select one feature!")
             feedback.reportError(msg)
             raise QgsProcessingException(msg)
         #take CRS from Rasterlayer 
