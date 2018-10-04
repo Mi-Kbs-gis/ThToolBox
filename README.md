@@ -32,10 +32,11 @@ If the the point z value are in a feature attribute
 If the points have no realtionship to an elevation value, elevation is used from a Raster DEM.
 To create vertical lines (bore axis) use Dept Start und Dept End from freature attributes.
 Select a line feature or use an one feature layer as Baseline.
+If the baseline is a polylinestring, there could be blind spots.
 ````
 #### Reverse To Real World
 ````
-Retransform point, line or polygon geometry from profile coordinates back to real world considering a baseline.
+Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
 Select a line feature or use an one feature layer as Baseline.
 ````
 ### Web
@@ -44,9 +45,9 @@ Select a line feature or use an one feature layer as Baseline.
 ````
 Download from a feature attribute
 ````
-#### Rip WMS by Features
+#### Store WMS by Features
 ````
-Download from a feature attribute
+Download WMS images from a features bounding box
 ````
 
 ### Links
