@@ -45,7 +45,7 @@ Select a line feature or use an one feature layer as Baseline.
 ````
 Download from a feature attribute
 ````
-#### Store WMS by Features
+#### Store WMS images by Features
 ````
 Download WMS images from a features bounding box
 ````
