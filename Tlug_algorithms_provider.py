@@ -30,7 +30,7 @@ __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umw
 __revision__ = '$Format:%H$'
 
 from qgis.core import QgsProcessingProvider
-from .algorithm_FindDuplicates import FindDuplicates
+from .algorithm_SelectDuplicates import SelectDuplicates
 from .algorithm_TransformToProfil_Gradient import TransformToProfil_Gradient
 from .algorithm_TransformToProfil_LineIntersection import TransformToProfil_LineIntersection
 from .algorithm_TransformToProfil_PolygonIntersection import TransformToProfil_PolygonIntersection
@@ -38,6 +38,8 @@ from .algorithm_TransformToProfil_Points import TransformToProfil_Points
 from .algorithm_TransformGeomFromProfileToRealWorld import TransformGeomFromProfileToRealWorld
 from .algorithm_FileDownload import FileDownload
 from .algorithm_WMSRipper import WmsRipper
+from .algorithm_AttachRasterValuesToLineVertices import AttachRasterValuesToLineVertices
+
 
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator, qVersion
 
@@ -65,12 +67,18 @@ class TlugProcessingPluginProvider(QgsProcessingProvider):
             
         # Load algorithms
         self.alglist = []
-        self.alglist.append( FindDuplicates() )
+        
+        # RASTER TOOLS
+        self.alglist.append( AttachRasterValuesToLineVertices() )
+        
+        # VECTOR SELECTION TOOLS
+        self.alglist.append( SelectDuplicates() )
+        
+        # WEB
         self.alglist.append( FileDownload() )
         self.alglist.append( WmsRipper() )
-
         
-        # tools TO PROFILE COORDINATES
+        # TO PROFILE COORDINATES
         self.alglist.append( TransformToProfil_Gradient() )
         self.alglist.append( TransformToProfil_LineIntersection() )
         self.alglist.append( TransformToProfil_PolygonIntersection() )

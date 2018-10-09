@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2018-10-08'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -347,7 +347,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
             #calc profile geometry
             profilItems, isGeomOnLine = self.extractProfilGeom(srcGeom, ueberhoehung, lp, feedback)
             if isGeomOnLine == False:
-                feedback.pushInfo("Feature({0}) is not orthogonal to the Base Line: ".format( srcFeat.fid() ) + " " + srcGeom.asWkt())
+                feedback.pushInfo("Feature({0}) is not orthogonal to the Base Line: ".format( srcFeat.id() ) + " " + srcGeom.asWkt())
             else:
                 for profilItem in profilItems:
                     profilFeat = QgsFeature(srcFeat.fields())   

@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2018-10-09'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -39,6 +39,9 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFeatureSink,
                        QgsProcessingParameterNumber,
                        QgsProcessingParameterField,
+                       QgsProcessingParameterExpression,
+                       QgsExpression,
+                       QgsExpressionContext,
                        QgsProject,
                        QgsFeature,
                        QgsFeatureRequest,
@@ -115,12 +118,11 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
             )
         )
         self.addParameter(
-            QgsProcessingParameterField(
+            QgsProcessingParameterExpression(
                 self.OFFSETFIELD,
-                self.tr('Offset Attribute'),
-                None,
-                self.INPUTVECTORLAYER,
-                QgsProcessingParameterField.Numeric,
+                self.tr('Offset'),
+                "0",
+                self.INPUTVECTORLAYER,#DoTo: set Datatyp Numeric
                 optional=True
 
             )
@@ -145,10 +147,15 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         vectorLayer = self.parameterAsVectorLayer(parameters, self.INPUTVECTORLAYER, context)
         baseLineLayer = self.parameterAsVectorLayer(parameters, self.INPUTBASELINE, context)
         offsetFieldName = self.parameterAsString(parameters, self.OFFSETFIELD, context)
-        offsetFieldIndex=-1
-        if not offsetFieldName=="":
-            fields = vectorLayer.fields()
-            offsetFieldIndex = vectorLayer.fields().lookupField(offsetFieldName)
+        #offsetFieldIndex=-1
+        
+        #if not offsetFieldName=="":
+            #fields = vectorLayer.fields()
+            #offsetFieldIndex = vectorLayer.fields().lookupField(offsetFieldName)
+        offsetExpr=QgsExpression(offsetFieldName)
+        if offsetExpr.hasParserError():
+            raise QgsProcessingException(offsetExpr.parserErrorString())
+        offsetExprContext = QgsExpressionContext()
         baseLineFeature=None
         baseLine=None
         #Basline Layer must have only 1 Feature
@@ -206,8 +213,24 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         for feat in vectorLayer.getFeatures():
 
             abstand=0
-            if not offsetFieldIndex == -1:
-                abstand=feat.attribute(offsetFieldIndex)
+            offsetExprContext.setFeature( feat )
+            try:
+                abstand = offsetExpr.evaluate( offsetExprContext )
+            except:
+                msg = self.tr("Error while calculating Offset from Expression. Feature " + str(feat.attributes()) )
+                feedback.reportError(msg)
+                raise QgsProcessingException(msg)
+            try:
+                #check for numeric Expression Data type 
+                a=int(abstand)
+                b=float(abstand) 
+            except:
+                msg = self.tr("Error Offset Experession result must be numeric, not " + str( type( abstand )) )
+                feedback.reportError(msg)
+                raise QgsProcessingException(msg)
+
+            #if not offsetFieldIndex == -1:
+            #    abstand=feat.attribute(offsetFieldIndex)
             #feedback.pushInfo("GeometryType: " + str( vectorLayer.geometryType() ) + " name: " + vectorLayer.name() + " Feat: " + str( feat.geometry().wkbType() ) )
             if vectorLayer.geometryType() == 2: #Polygon
                 # fill Vertices with Baseline-Breakpoints

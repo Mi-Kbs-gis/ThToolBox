@@ -1,60 +1,28 @@
-# TlugProcessing at master
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
 
+  
+  <title>TlugProcessing/README.md at master · Mi-Kbs-gis/TlugProcessing</title>
+  </head>
+  <body>
 
-## QGIS Processing Toolbox of TLUG
-### Vector Selection Tools
-#### Find duplicates
-### To Profile Coordinates (Cross Section)
-```
-Geometrys would be transformed to a linear referencing by a baseline
-```
-#### Baseline
-````
-Transforms a single Line to profile coordinates with considering of elevation.
-Select a line feature or use an one feature layer as Baseline.
-````
-#### Line - Baseline Intersections
-````
-Get the intersections from a line layer with the baseline and transform them to profile coordinates.
-Select a line feature or use an one feature layer as Baseline.
-````
-#### Polygon - Baseline Intersections
-````
-Get the intersections from a polygon layer with the baseline and transform them to profile coordinates.
-The intersection range can be represented through points or lines.
-Select a line feature or use an one feature layer as Baseline.
-````
-#### Points (incl. Bore Axis)
-````
-Transforms a point layer or selection to profile coordinates with considering of elevation.
-If points has z values, they will used. 
-If the the point z value are in a feature attribute
-If the points have no realtionship to an elevation value, elevation is used from a Raster DEM.
-To create vertical lines (bore axis) use Dept Start und Dept End from freature attributes.
-Select a line feature or use an one feature layer as Baseline.
-If the baseline is a polylinestring, there could be blind spots.
-````
-#### Reverse To Real World
-````
-Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
-Select a line feature or use an one feature layer as Baseline.
-````
-### Web
+	  <div id="readme" class="readme blob instapaper_body">
+		<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-tlugprocessing" class="anchor" aria-hidden="true" href="#tlugprocessing"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>TlugProcessing</h1>
+			<p>QGIS Processing Toolbox of TLUG</p>
+			<p>Algorithms:</p>
+			<p>Vector Selection Tools:</p>
+			<p>-Find duplicates</p>
+			<p>To Profile Coordinates (Cross Section):</p>
+			<p>-Baseline</p>
+			<p>-Line - Baseline Intersections</p>
+			<p>-Polygon - Baseline Intersections</p>
+			<p>-Points (incl. Bore Axis)</p>
+			<p>-Reverse To Real World</p>
+		</article>
+	  </div>
 
-#### Download by Features
-````
-Download from a feature attribute
-````
-#### Store WMS images by Features
-````
-Download WMS images from a features bounding box
-````
+  </body>
+</html>
 
-### Links
-* [TlugProcessing](https://plugins.qgis.org/plugins/TlugProcessing/) -The PlugIn Website
-* [github](https://github.com/Mi-Kbs-gis/TlugProcessing) -GitHub Website
-
-
-### Authors
-
-* **Michael Kürbs**  - [TLUG](https://www.thueringen.de/th8/tlug/)
