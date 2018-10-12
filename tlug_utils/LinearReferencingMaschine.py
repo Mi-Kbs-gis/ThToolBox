@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2018-10-10'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 from qgis.core import *
@@ -89,7 +89,14 @@ class LinearReferencingMaschine(QObject):
         #self.feedback.pushInfo("1geomClip: "+ str(geomClip.asWkt()))
         #QgsFeatureRequest liefert alle Punkte, die zur Linie gehoeren
         #QgsFeatureRequest wird im srcLayer.crs() durchgeführt
-        index = QgsSpatialIndex(srcLayer.getFeatures())
+        index=None
+        try:
+            index = QgsSpatialIndex(srcLayer.getFeatures())
+        except:
+            msg="Input layer feature count is too big! Try to use it with a selection!"
+            feedback.reportError(msg)
+            raise QgsProcessingException(msg)
+            
         intersect = index.intersects(geomClip.boundingBox())
         cands = srcLayer.getFeatures(intersect)
 
@@ -865,8 +872,10 @@ class LinearReferencingMaschine(QObject):
         curStation=0
         pRW = None
         for line in self.lineSegments:
+            if not pRW is None:
+                break
             #is point an this segment
-            if station < (curStation + line.length()) and station > curStation:
+            if round(station, 3) < round(curStation + line.length(),3) and round(station,3) > round(curStation,3):
                 p1 = line.vertexAt(0)         
                 p2 = line.vertexAt(1) 
                 #Deltas 1->2
@@ -898,8 +907,12 @@ class LinearReferencingMaschine(QObject):
                     xRW = p1.x() + ( dx * t1Factor ) + dxOrtho * t2Factor
                     yRW = p1.y() + ( dy * t1Factor ) + dyOrtho * t2Factor
                     pRW = QgsPointXY( xRW, yRW ) 
-            elif station == curStation: # If it is exactly the baseLine-Vertex
+            elif round(station, 3) == round(curStation,3): # If it is exactly the baseLine-Vertex
                 p1 = line.vertexAt(0)
+                pRW = QgsPointXY( p1.x(), p1.y() ) 
+            elif round(station, 3) == round(self.profilLine.length(),3): # If it is exactly the baseLine-End-Vertex
+                line=self.lineSegments[ len( self.lineSegments ) - 1 ]
+                p1 = line.vertexAt(1)
                 pRW = QgsPointXY( p1.x(), p1.y() ) 
             
 
