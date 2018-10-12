@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-09'
+__date__ = '2018-10-12'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -59,16 +59,8 @@ from .tlug_utils.LaengsProfil import LaengsProfil
 
 class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
+    Select a line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -288,6 +280,15 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         formatting characters.
         """
         return 'To Profile Coordinates'
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr(self.__doc__)
+
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-08'
+__date__ = '2018-10-12'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -45,7 +45,7 @@ from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
 
 class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
     """
-    This is an algorithm that selects all duplicates in a table field.
+    This is an algorithm that selects all duplicates in a table field or based of an Expression.
     """
 
     INPUT = 'INPUT'
@@ -151,6 +151,14 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
 
     def description(self):
         return self.tr('Processing', 'Select duplicate values in a feature field.')
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr(self.__doc__)
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

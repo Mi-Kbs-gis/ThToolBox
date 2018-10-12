@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-05'
+__date__ = '2018-10-12'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -53,21 +53,13 @@ from .tlug_utils.LaengsProfil import LaengsProfil
 
 class AttachRasterValuesToLineVertices(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Algorithm transform a LineString to LineStringZ geometry.
+    
+    Two modes available
+    Mode "only vertices" sets Z-Values to given line vertices based on a (1 Band) raster data source.
+    Mode "fill by raster resolution" sets Z-Values to given line vertices and fill additional vertices based on the resolution of the raster layer.
     """
 
-    # Constants used to refer to parameters and outputs. They will be
-    # used when calling the algorithm from another algorithm, or when
-    # calling from the QGIS console.
 
     OUTPUT = 'OUTPUT'
     INPUTLINELAYER = 'INPUTLINELAYER'
@@ -196,14 +188,14 @@ class AttachRasterValuesToLineVertices(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return self.tr( 'Attach raster values to line vertices' )
+        return self.tr( 'AttachRasterValuesToLineVertices' )
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Attach raster values to line vertices')
 
     def group(self):
         """
@@ -221,6 +213,15 @@ class AttachRasterValuesToLineVertices(QgsProcessingAlgorithm):
         formatting characters.
         """
         return '3D tools'
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr(self.__doc__)
+
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

@@ -21,7 +21,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-09-20'
+__date__ = '2018-10-12'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -56,18 +56,15 @@ from qgis.core import (QgsProcessing,
                        QgsPointXY,
                        QgsGeometry,
                        QgsCoordinateTransform,
-                       QgsProcessingException)
+                       QgsProcessingException,
+                       QgsProcessingParameterExpression,
+                       QgsExpression,
+                       QgsExpressionContext)
 
 class WmsRipper(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Download WMS images from a WMS server based of features bounding box.
+    World files will be created.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -93,6 +90,7 @@ class WmsRipper(QgsProcessingAlgorithm):
     fieldNamePath='path'
     fieldNameFile='file'
     fieldNameResponseType='content'
+    fieldNameHttpStatusCode='httpstatus'
     imageFormats = ['jpeg',
               'png',
               'jpg'
@@ -166,17 +164,25 @@ class WmsRipper(QgsProcessingAlgorithm):
             )
         )
 
-        self.addParameter(
-            QgsProcessingParameterField(
-                self.FILENAME_FIELD,
-                self.tr('Field with Filenames'),
-                None,
-                self.INPUT_LAYER,
-                QgsProcessingParameterField.Any,
-                optional=False
+        # self.addParameter(
+            # QgsProcessingParameterField(
+                # self.FILENAME_FIELD,
+                # self.tr('Field with Filenames'),
+                # None,
+                # self.INPUT_LAYER,
+                # QgsProcessingParameterField.Any,
+                # optional=False
 
+            # )
+        # )
+        self.addParameter(
+            QgsProcessingParameterExpression(
+                self.FILENAME_FIELD,
+                self.tr('Filenames'),
+                parentLayerParameterName=self.INPUT_LAYER
             )
         )
+      
         self.addParameter(
             QgsProcessingParameterFolderDestination(
                 self.DOWNLOAD_DIR,
@@ -204,21 +210,27 @@ class WmsRipper(QgsProcessingAlgorithm):
         imageFormatIdx = self.parameterAsEnum(parameters, self.IMAGE_FORMAT, context)
         pixelSize = self.parameterAsDouble(parameters, self.PIXEL_SIZE, context)
         
-        fileNameField = self.parameterAsString(parameters, self.FILENAME_FIELD, context)
+        exprFileNameString = self.parameterAsString(parameters, self.FILENAME_FIELD, context)
         vectorLayer= self.parameterAsVectorLayer(parameters, self.INPUT_LAYER, context)
         self.path = self.parameterAsFile(parameters, self.DOWNLOAD_DIR, context)
 
-        fileNameFileIndex=-1
-        if not fileNameField=="":
-            fileNameFileIndex = vectorLayer.fields().lookupField(fileNameField)
+        # fileNameFileIndex=-1
+        # if not fileNameField=="":
+            # fileNameFileIndex = vectorLayer.fields().lookupField(fileNameField)
+        exprFileName=QgsExpression(exprFileNameString)
+        if exprFileName.hasParserError():
+            raise QgsProcessingException("Invalid Filename Expression: " + exprFileName.parserErrorString())
 
+        exprContext = QgsExpressionContext()
+            
         if baseUrl=="":
             raise ###
 
         fields = vectorLayer.fields()
-        fields.append(QgsField(self.fieldNamePath, QVariant.String))
-        fields.append(QgsField(self.fieldNameFile, QVariant.String))
-        fields.append(QgsField(self.fieldNameResponseType, QVariant.String))
+        fields.append( QgsField( self.fieldNamePath, QVariant.String ) )
+        fields.append( QgsField( self.fieldNameFile, QVariant.String ) )
+        fields.append( QgsField( self.fieldNameResponseType, QVariant.String ) )
+        fields.append( QgsField( self.fieldNameHttpStatusCode, QVariant.Int) )
         #take CRS from Project
         crsProject=QgsProject.instance().crs()         
 
@@ -262,12 +274,19 @@ class WmsRipper(QgsProcessingAlgorithm):
             
             #get File type combo item
             fileExt = self.imageFormats[imageFormatIdx]
-
-            if fileNameFileIndex > -1:
-                file_name = str(feature[fileNameFileIndex])
-            else:
+            
+            
+            exprContext.setFeature(feature)
+            file_name = exprFileName.evaluate(exprContext)
+            if file_name is None or file_name == '':
                 file_name = "WMS_Tile_"+ str( i+1 )
+                feedback.pushInfo("Invalid Filename Expression on Feature: " + str(i) + " saved as " + file_name)
+            # if fileNameFileIndex > -1:
+                # file_name = str(feature[fileNameFileIndex])
+            # else:
+                # file_name = "WMS_Tile_"+ str( i+1 )
             contentType=None
+            httpStatusCode=None
             #Replace Special Characters
             file_name=file_name.replace(":","_")
             file_name=file_name.replace("*","_")
@@ -283,7 +302,8 @@ class WmsRipper(QgsProcessingAlgorithm):
                     #result = requests.get(qUrl.url().replace('&amp;','&'), stream=False)
                     result = requests.get(url, stream=False)
                     
-                    contentType=result.headers.get('Content-Type')
+                    contentType = result.headers.get('Content-Type')
+                    httpStatusCode = result.status_code
                     feedback.pushInfo(str(i) + ' ('+str(contentType)+') ' + url)
                     if result.status_code == 200:
                         filePath=self.path + "\\" + file_name + '.' + fileExt.lower()
@@ -314,17 +334,18 @@ class WmsRipper(QgsProcessingAlgorithm):
                         
                     else:
                         hasError=True
-                        feedback.pushInfo(str(i) + ": " + str(url) + "  HTTP Status Code:" + str(result.status_code) )
+                        feedback.pushInfo("Problem at Feature " + str(i) + ": " + unicode(url) + "  HTTP Status Code:" + str(result.status_code) )
             
 
                     loopText = loopText + " Download finished"
                 except Exception as err:
                     hasError=True
-                    loopText = loopText + "\n\t Download error: On Feature " + str(i) + " URL: " + url + " " + str(err.args) + ";" + str(repr(err))
+                    loopText = loopText + "\n\t Download error: On Feature " + str(i) + " URL: " + unicode(url) + " " + str(err.args) + ";" + str(repr(err))
                 
 
             if hasError == True or str(url) == "NULL" or str(url) == "":
                 #add a emty String if no Url
+                attrs.append( None )
                 attrs.append( None )
                 attrs.append( None )
                 attrs.append( None )
@@ -333,7 +354,8 @@ class WmsRipper(QgsProcessingAlgorithm):
                 attrs.append( self.path + "\\")
                 attrs.append( file_name + '.' + fileExt.lower() )
                 attrs.append( contentType )
-            
+                attrs.append( httpStatusCode )
+           
 
             try:
                 out_feat = QgsFeature()
@@ -405,6 +427,14 @@ class WmsRipper(QgsProcessingAlgorithm):
         formatting characters.
         """
         return 'Web'
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr(self.__doc__)
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

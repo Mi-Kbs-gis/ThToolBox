@@ -22,13 +22,14 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-08'
+__date__ = '2018-10-12'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
 __revision__ = '$Format:%H$'
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QCoreApplication, QVariant#, ZeroDivisionError
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
@@ -56,16 +57,15 @@ from .tlug_utils.ProfilItem import ProfilItem
 
 class TransformToProfil_Points(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Transforms a point layer or selection to profile coordinates with considering of elevation.
+    If points has z values, they will used. 
+    If the the point z value are in a feature attribute
+    If the points have no realtionship to an elevation value, elevation is used from a Raster DEM.
+    Function only processes the points inside a buffer around the Baseline or if there is a selection, all selected points.
+    Extrapolation is not supported. Points have to be perpendicular to the baseline.
+    To create vertical lines (bore axis) use Dept Start and Dept End from freature attributes.
+    Select a line feature or use an one feature layer as Baseline.
+    If the baseline is a polylinestring, there could be blind spots.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -403,6 +403,14 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         formatting characters.
         """
         return 'To Profile Coordinates'
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr(self.__doc__)
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)
