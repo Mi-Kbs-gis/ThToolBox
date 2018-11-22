@@ -10,21 +10,57 @@
 name=TlugProcessing
 qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=2.4
+version=2.5
 author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 email=Michael.Kuerbs@tlug.thueringen.de
 
-about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG). \n\n Vector Seletion Tools\nProfile Coordinates
+about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG). 
+	<b>To 3D</b>
+	<b>To Profile Coordinates</b>
+	<b>Vector Seletion</b>
+	<b>Web</b>
 
 tracker=https://github.com/Mi-Kbs-gis/TlugProcessing
 repository=https://github.com/Mi-Kbs-gis/TlugProcessing
+<a href="http://www.tlug-jena.de">TLUG</a>
 # End of mandatory metadata
 
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog = Improvements on web and profile algorithms
-
+changelog = 2.5 Nov. 22, 2018
+		- Symbols for each algorithm
+	2.4	Oct. 12, 2018
+		- added shortHelpString as description for all algorithms
+		- algorithm "Select duplicates" supports Expressions
+		- algorithm "ReverseToRealWorld" supports Expressions on field "offset"
+	2.3	 Oct. 9, 2018
+		- new algorithm "Attach Raster Values To Line Vertices"
+		- Find Duplicates renamed to "Select Duplicates"
+		- Select Duplicates now uses FieldExpressionWidget
+		- BugFixes on "To Profile Coordinates/Points (incl. Bore Axis)"
+	2.2.1	Oct. 2, 2018
+		- Improvements on web and profile algorithms
+	2.2	 Sept. 20, 2018
+		- new algorithm 'Store WMS images by features'
+	2.1	Sept. 17, 2018
+		- Bugfixes in To Profile Coordinates
+		- new algorithm "Web" / "Download per Feature"
+	2.0.1 Aug. 28, 2018
+		- plugin were moved to QGIS 3.x
+		- new algorithms group "To Profile Coordinates (Cross Section)"
+			-- "Baseline"
+			-- "Line - Baseline Intersections"
+			-- "Polygon - Baseline Intersections"
+			-- "Points (incl. Bore Axis)"
+			-- "Reverse To Real World"
+	1.2 March 27, 2018
+		- buxfixes
+	1.1 Feb. 21, 2018
+		- New algorithm "Sample Raster Values To Point Layer" was added!
+	1.0 Dec. 21, 2017
+		- First version
+	
 # Tags are comma separated with spaces allowed
 tags=Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample
 

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5314"
+   sodipodi:docname="TransformGeomFromProfileToRealWorld_Logo.svg"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:export-filename="C:\Users\kuerbs\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\TlugProcessing\icons\TransformGeomFromProfileToRealWorld_Logo.png"
+   inkscape:export-xdpi="7"
+   inkscape:export-ydpi="7">
+  <defs
+     id="defs5308" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-20.5498"
+     inkscape:cy="822.40032"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1433"
+     inkscape:window-height="927"
+     inkscape:window-x="2271"
+     inkscape:window-y="266"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata5311">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g881">
+      <path
+         inkscape:connector-curvature="0"
+         id="flowRoot1221-8"
+         d="m 51.950002,103.31262 c -22.860766,-0.50774 -38.990193,20.32559 -40.045326,41.85955 27.107834,-1.90806 34.184962,10.88788 25.185036,35.52452 10.811409,-7.86563 32.281221,-5.11208 23.938678,11.99885 -7.544161,10.7943 -17.882185,-4.16989 -15.177395,-12.82482 -11.444152,4.86942 -41.459632,-4.30481 -33.297346,15.583 5.580978,37.68507 62.390604,45.05778 80.319275,12.88383 10.583236,-15.40781 6.118565,-38.47961 -6.79223,-49.35971 21.835046,-24.72999 -4.631756,-59.239034 -34.130692,-55.66522 z m 49.256478,7.94268 c 0,38.5556 0,77.11122 0,115.66684 31.32433,-2.52654 76.85367,10.54408 96.52912,-23.18648 17.47001,-31.60299 12.37884,-85.1545 -26.60101,-97.72387 -22.92872,-4.85084 -46.69289,-1.11958 -69.92811,-2.30833 v 3.77592 z m -46.763814,24.1673 c 13.569341,6.28063 -14.965485,19.26614 -5.199242,2.39685 1.095428,-1.75196 3.165166,-2.65546 5.199242,-2.39685 z m 85.879894,1.6741 c 15.37789,-3.67804 31.4172,5.53462 28.82822,22.86197 2.08498,14.90663 -1.38516,38.90047 -22.38264,33.64399 -17.57977,3.08296 -6.27889,-47.92803 -6.44558,-56.50596 z"
+         style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3.77591228" />
+      <flowRoot
+         transform="matrix(3.7759124,0,0,3.7759124,-2588.0717,-1896.9328)"
+         style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#00aa00;fill-opacity:1;stroke:none;"
+         id="flowRoot1221-4-6"
+         xml:space="preserve"><flowRegion
+           style="fill:#00aa00;fill-opacity:1;"
+           id="flowRegion1223-1"><rect
+             style="fill:#00aa00;fill-opacity:1;"
+             y="524.5094"
+             x="688.92401"
+             height="307.08636"
+             width="402.04071"
+             id="rect1225-0" /></flowRegion><flowPara
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold';fill:#00aa00;"
+           id="flowPara1227-7">3D</flowPara></flowRoot>    </g>
+    <g
+       id="g1278-7"
+       transform="matrix(0.04931482,-0.65775218,0.65775218,0.04931482,-34.579179,-36.58321)"
+       style="fill:#00d400;stroke:#00aa00;stroke-width:21.22504044;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-xdpi="7"
+       inkscape:export-ydpi="7">
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path1236-4"
+         d="m -141.18249,144.37089 c 0,0 8.3119,112.6127 11.15868,168.88209"
+         style="fill:#00d400;stroke:#00aa00;stroke-width:21.22504044;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <g
+         id="g1272-2"
+         style="fill:#00d400;stroke:#00aa00;stroke-width:21.22504044;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <path
+           style="fill:#00d400;stroke:#00aa00;stroke-width:21.22504044;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m -173.11309,270.91965 43.08928,42.33333"
+           id="path1236-1-6"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+        <path
+           style="fill:#00d400;stroke:#00aa00;stroke-width:21.22504044;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m -86.934527,270.91965 -43.089283,42.33333"
+           id="path1236-1-4-8"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+      </g>
+    </g>
+  </g>
+</svg>
