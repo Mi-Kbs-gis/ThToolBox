@@ -23,6 +23,7 @@ Geometrys would be transformed to a linear referencing by a baseline.
 #### Baseline
 ````
 Transforms a single Line to profile coordinates with considering of elevation.
+On Raster NoDATA-Values, the profile elevation where set to 0.
 Select a line feature or use an one feature layer as Baseline.
 ````
 #### Line - Baseline Intersections

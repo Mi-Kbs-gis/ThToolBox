@@ -10,7 +10,7 @@
 name=TlugProcessing
 qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=2.5
+version=2.6
 author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 email=Michael.Kuerbs@tlug.thueringen.de
 
@@ -20,7 +20,7 @@ about=This is a processing tools collection of the Thüringer Landesanstalt für
 	<b>Vector Seletion</b>
 	<b>Web</b>
 
-tracker=https://github.com/Mi-Kbs-gis/TlugProcessing
+tracker=https://github.com/Mi-Kbs-gis/TlugProcessing/issues
 repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 <a href="http://www.tlug-jena.de">TLUG</a>
 # End of mandatory metadata
@@ -28,7 +28,9 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.5 Nov. 22, 2018
+changelog = 2.6 Dez. 17, 2018
+		- algorithm "Baseline" NoDATA-Values where used as 0
+	2.5 Nov. 22, 2018
 		- Symbols for each algorithm
 	2.4	Oct. 12, 2018
 		- added shortHelpString as description for all algorithms
@@ -62,11 +64,11 @@ changelog = 2.5 Nov. 22, 2018
 		- First version
 	
 # Tags are comma separated with spaces allowed
-tags=Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample
+tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample
 
 homepage=https://github.com/Mi-Kbs-gis/TlugProcessing
 category=Analysis
-icon=icon.png
+icon=icons\TlugProcessing_Logo.png
 # experimental flag
 experimental=False
 
