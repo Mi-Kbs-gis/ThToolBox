@@ -10,7 +10,7 @@
 name=TlugProcessing
 qgisMinimumVersion=3.0
 description=TLUG Algorithms
-version=2.6
+version=2.7
 author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
 email=Michael.Kuerbs@tlug.thueringen.de
 
