@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -54,18 +54,20 @@ from .tlug_utils.TerrainModel import TerrainModel
 from .tlug_utils.LaengsProfil import LaengsProfil
 import math
 from .tlug_utils.ProfilItem import ProfilItem
+from PyQt5.QtGui import QIcon
+import os
 
 class TransformToProfil_Points(QgsProcessingAlgorithm):
     """
     Transforms a point layer or selection to profile coordinates with considering of elevation.
     If points has z values, they will used. 
-    If the the point z value are in a feature attribute
+    If the the point z value are in a feature attribute, you can use it for elevation.
     If the points have no realtionship to an elevation value, elevation is used from a Raster DEM.
-    Function only processes the points inside a buffer around the Baseline or if there is a selection, all selected points.
+    This Function is processing only the points inside a buffer around the Baseline or if there is a selection, all selected points.
     Extrapolation is not supported. Points have to be perpendicular to the baseline.
     To create vertical lines (bore axis) use Dept Start and Dept End from freature attributes.
     Select a line feature or use an one feature layer as Baseline.
-    If the baseline is a polylinestring, there could be blind spots.
+    If the baseline is a polylinestring, there could be blind spots. Points in blind spots will be ignored.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -378,14 +380,14 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Points (incl. Bore Axis)'
+        return self.tr('Points_Bore_Axis')
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Points (incl. Bore Axis)')
 
     def group(self):
         """
@@ -411,6 +413,10 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+   
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformToProfil_Points_Logo.png'))
+
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)
@@ -487,18 +493,19 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         if "Point" in geom.asWkt(): #geom.type()==1: #Point
             if geom.isMultipart():
                 multiGeom = geom.asMultiPoint()
-                for i in multiGeom:
-                    points=[]
-                    for pxy in i:
-                        station, abstand=laengsProfil.linearRef.transformToLineCoords(pxy)
-                        if not station is None and not abstand is None:
-                            ptProfil=QgsPointXY(station, pxy.z() * zFactor)
-                            points.append(ptProfil)
-                        else:
-                            isOnBaseLine=False
+                #points=[]
+                for pxy in multiGeom:
+                    #for pxy in i:
+                    ptProfil=None
+                    station, abstand=laengsProfil.linearRef.transformToLineCoords(pxy)
+                    if not station is None and not abstand is None:
+                        ptProfil=QgsPointXY(station, pxy.z() * zFactor)
+                        #points.append(ptProfil)
+                    else:
+                        isOnBaseLine=False
                     if isOnBaseLine==True:
-                        geometries.append(QgsGeometry().fromPointXY(points))
-                        item=ProfilItem(geom, QgsGeometry().fromPointXY(points), station, abstand, zFactor)
+                        geometries.append(QgsGeometry().fromPointXY(ptProfil))
+                        item=ProfilItem(geom, QgsGeometry().fromPointXY(ptProfil), station, abstand, zFactor)
                         profilItems.append(item)
             else:
                 pxy=geom.vertexAt(0)

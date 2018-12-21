@@ -11,11 +11,15 @@ Two modes available
 Mode "only vertices" sets Z-Values to given line vertices based on a (1 Band) raster data source.
 Mode "fill by raster resolution" sets Z-Values to given line vertices and fill additional vertices based on the resolution of the raster layer.
 ````
-### Vector Selection Tools
-#### Select duplicates
+
+### File Tools
+
+#### Files To Table
 ````
-Selects all duplicates in a field or based on a expression.
+Returns a table with entrys for each file in a directory. 
+Include some file properties.
 ````
+
 ### To Profile Coordinates (Cross Section)
 ```
 Geometrys would be transformed to a linear referencing by a baseline.
@@ -54,6 +58,13 @@ If the baseline is a polylinestring, there could be blind spots.
 Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
 Select a line feature or use an one feature layer as Baseline.
 ````
+
+### Vector Selection Tools
+#### Select duplicates
+````
+Selects all duplicates in a field or based on a expression.
+````
+
 ### Web
 
 #### Download by Features

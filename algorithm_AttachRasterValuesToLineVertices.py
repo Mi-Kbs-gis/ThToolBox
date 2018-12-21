@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-11-22'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -189,7 +189,7 @@ class AttachRasterValuesToLineVertices(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return self.tr( 'AttachRasterValuesToLineVertices' )
+        return self.tr( 'Attach_Raster_Values_To_Line_Vertices' )
 
     def displayName(self):
         """
@@ -213,7 +213,7 @@ class AttachRasterValuesToLineVertices(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'To 3D'
+        return '2D -> 3D'
 
     def shortHelpString(self):
         """

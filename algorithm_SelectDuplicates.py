@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -41,6 +41,9 @@ from qgis.core import (QgsExpression,
                        QgsProcessingOutputVectorLayer)
 from PyQt5.QtCore import QCoreApplication
 from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
+from PyQt5.QtGui import QIcon
+import os
+
 
 
 class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
@@ -128,7 +131,7 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
 
     def name(self):
 
-        return 'SelectDuplicates'
+        return 'Select_Duplicates'
 
     def displayName(self):
 
@@ -159,6 +162,26 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+    
+    def helpUrl(self):
+        return self.tr('https://github.com/Mi-Kbs-gis/TlugProcessing')
+
+    def tags(self):
+        tags=[]
+        tags.append("duplicate")
+        tags.append("Duplikate")
+        tags.append("redundant")
+        tags.append("doppelt Einträge")
+        tags.append("select")
+        tags.append("mark")
+        tags.append("Auswahl")
+        tags.append("auswählen")
+        return tags
+        
+   
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/SelectDuplicates_Logo.png'))
+
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

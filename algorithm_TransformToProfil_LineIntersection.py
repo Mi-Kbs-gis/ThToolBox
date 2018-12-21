@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -49,7 +49,8 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingException)
 from .tlug_utils.TerrainModel import TerrainModel
 from .tlug_utils.LaengsProfil import LaengsProfil
-#from .tlug_utils.LayerSwitcher import LayerSwitcher
+from PyQt5.QtGui import QIcon
+import os
 
 class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
     """
@@ -231,14 +232,14 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Line - Baseline Intersections'
+        return self.tr('Line_Baseline_Intersections')
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Line - Baseline Intersections')
 
     def group(self):
         """
@@ -264,6 +265,10 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+
+   
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformToProfil_LineIntersection_Logo.png'))
 
 
     def tr(self, string):

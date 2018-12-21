@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -55,7 +55,8 @@ from qgis.core import (QgsProcessing,
 from .tlug_utils.LinearReferencingMaschine import LinearReferencingMaschine
 from .tlug_utils.TerrainModel import TerrainModel
 from .tlug_utils.LaengsProfil import LaengsProfil
-#from .tlug_utils.LayerSwitcher import LayerSwitcher
+from PyQt5.QtGui import QIcon
+import os
 
 class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
     """
@@ -255,14 +256,14 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Reverse To Real World'
+        return self.tr('Reverse_To_Real_World')
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Reverse To Real World')
 
     def group(self):
         """
@@ -288,6 +289,10 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+
+   
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformGeomFromProfileToRealWorld_Logo.png'))
 
 
     def tr(self, string):

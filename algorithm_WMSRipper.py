@@ -21,7 +21,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -60,6 +60,8 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterExpression,
                        QgsExpression,
                        QgsExpressionContext)
+from PyQt5.QtGui import QIcon
+import os
 
 class WmsRipper(QgsProcessingAlgorithm):
     """
@@ -238,20 +240,23 @@ class WmsRipper(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
                 context, fields, vectorLayer.wkbType(), crsProject)
 
-        try:
-            total = 100.0 / vectorLayer.featureCount()
-        except:
-            msg = self.tr("no Features to process")
-            feedback.reportError(msg)
-            raise QgsProcessingException(msg)
-            
+        total=1
                
         #Check if any features are selected
         if vectorLayer.selectedFeatureCount() > 0:
             # Take only the selected features
             iter=vectorLayer.selectedFeatures()
+            total = 100.0 / vectorLayer.selectedFeatureCount()
         else:
+
             iter = vectorLayer.getFeatures()
+            try:
+                total = 100.0 / vectorLayer.featureCount() #Division durch 0
+            except:
+                msg = self.tr("no Features to process")
+                feedback.reportError(msg)
+                raise QgsProcessingException(msg)
+         
         countDownload=0 
         for i, feature in enumerate(iter):
             hasError=False
@@ -300,11 +305,15 @@ class WmsRipper(QgsProcessingAlgorithm):
                 try:
             
                     #result = requests.get(qUrl.url().replace('&amp;','&'), stream=False)
-                    result = requests.get(url, stream=False)
+                    #result = requests.get(url, stream=False)
+                    result = self.getResponse(url, 5, 0) # % Versuche
                     
-                    contentType = result.headers.get('Content-Type')
-                    httpStatusCode = result.status_code
-                    feedback.pushInfo(str(i) + ' ('+str(contentType)+') ' + url)
+                    if not result.headers is None and not result.status_code is None:
+                        httpStatusCode = result.status_code
+                        contentType = result.headers.get('Content-Type')
+                        feedback.pushInfo(str(i) +' '+ file_name + ' ('+str(contentType)+') ' + url)
+                    else:
+                        feedback.pushInfo(str(i) +' '+ file_name + ' ('+str(httpStatusCode)+') ' + url)
                     if result.status_code == 200:
                         filePath=self.path + "\\" + file_name + '.' + fileExt.lower()
                         #image = result.raw.read()
@@ -392,7 +401,14 @@ class WmsRipper(QgsProcessingAlgorithm):
         feedback.pushInfo(msgInfo)
         # Return the results of the algorithm. In this case our only result is
         return {self.OUTPUT: dest_id}
-    
+
+    def getResponse(self, url, maxIteration, curIterartion=0):
+        result = requests.get(url, stream=False)
+
+        if not result.status_code == 200 and curIterartion < maxIteration:
+            self.getResponse(url, maxIteration, curIterartion)
+        else:
+            return result
 
     def name(self):
         """
@@ -402,14 +418,14 @@ class WmsRipper(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Store WMS images by Features'
+        return 'Store_WMS_Images_By_Features'
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Store WMS Images By Features')
 
     def group(self):
         """
@@ -435,6 +451,9 @@ class WmsRipper(QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/StoreWMS_Logo.png'))
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

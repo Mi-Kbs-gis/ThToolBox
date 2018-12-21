@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-12'
+__date__ = '2018-12-21'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -51,12 +51,14 @@ from qgis.core import (QgsProcessing,
 from .tlug_utils.TerrainModel import TerrainModel
 from .tlug_utils.LaengsProfil import LaengsProfil
 from .tlug_utils.LinearReferencingMaschine import LinearReferencingMaschine
+from PyQt5.QtGui import QIcon
+import os
 
 class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
     """
     Get the intersections from a polygon layer with the baseline and transform them to profile coordinates.
-	The intersection range can be represented through points or lines.
-	Select a line feature or use an one feature layer as Baseline.
+    The intersection range can be represented through points or lines.
+    Select a line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -209,8 +211,14 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                     featuresWithZ.append(featZ)
 
             #config Output
-            newFields=featuresWithZ[0].fields()
-            wkbTyp=featuresWithZ[0].geometry().wkbType()
+            try:
+                newFields=featuresWithZ[0].fields()
+                wkbTyp=featuresWithZ[0].geometry().wkbType()
+            except Indexerror:
+                msg = self.tr("No Z values could be assigned to the Geometries.")
+                feedback.reportError(msg)
+
+                raise QgsProcessingException(msg)
             (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
             context, newFields, wkbTyp, crsProject)
 
@@ -249,14 +257,14 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Polygon - Baseline Intersections'
+        return self.tr('Polygon_Baseline_Intersections')
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr(self.name())
+        return self.tr('Polygon - Baseline Intersections')
 
     def group(self):
         """
@@ -282,6 +290,9 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         parameters and outputs associated with it..
         """
         return self.tr(self.__doc__)
+   
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformToProfil_PolygonIntersection_Logo.png'))
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)
