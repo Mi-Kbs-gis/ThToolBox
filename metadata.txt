@@ -30,7 +30,7 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # Uncomment the following line and add your changelog:
 changelog = 2.7 Dez. 21, 2018
 		- new algorithm "Files To Table"
-		- algorithm "Baseline" renamded to "Raster Gradient"
+		- algorithm "Baseline" renamed to "Raster Gradient"
 	2.6 Dez. 17, 2018
 		- algorithm "Baseline" NoDATA-Values where used as 0
 	2.5 Nov. 22, 2018
