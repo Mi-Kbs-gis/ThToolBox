@@ -39,12 +39,12 @@ from .algorithm_TransformGeomFromProfileToRealWorld import TransformGeomFromProf
 from .algorithm_FileDownload import FileDownload
 from .algorithm_WMSRipper import WmsRipper
 from .algorithm_AttachRasterValuesToLineVertices import AttachRasterValuesToLineVertices
+from .algorithm_Files2Table import Files2Table
 
 
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator, qVersion
-
-import os.path
-
+from PyQt5.QtGui import QIcon
+import os
 
 class TlugProcessingPluginProvider(QgsProcessingProvider):
 
@@ -84,6 +84,7 @@ class TlugProcessingPluginProvider(QgsProcessingProvider):
         self.alglist.append( TransformToProfil_PolygonIntersection() )
         self.alglist.append( TransformToProfil_Points() )
         self.alglist.append( TransformGeomFromProfileToRealWorld() )
+        self.alglist.append( Files2Table() )
 
     def unload(self):
         """
@@ -124,6 +125,9 @@ class TlugProcessingPluginProvider(QgsProcessingProvider):
         implementation returns the same string as name().
         """
         return self.name()
+    
+    def icon(self):
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TlugProcessing_Logo_small.png'))
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
