@@ -131,11 +131,11 @@ class Files2Table(QgsProcessingAlgorithm):
                 attrs=[]
                 if not fInfo==None:
                     # Attributes
-                    
+                    absFilePath=(os.path.join( fInfo.absolutePath(), fInfo.fileName()))
                     attrs.append( fInfo.fileName() )                        #0
                     attrs.append( fInfo.absoluteDir().absolutePath() )      #1
-                    attrs.append( fInfo.absolutePath() )                    #2
-                    attrs.append( fInfo.completeSuffix() )                  #3
+                    attrs.append( fInfo.absoluteFilePath() )                    #2
+                    attrs.append( fInfo.suffix() )                  #3
                     attrs.append( fInfo.birthTime()  )                      #4
                     attrs.append( fInfo.lastModified() )                    #5
                     attrs.append( fInfo.size() )                            #6
