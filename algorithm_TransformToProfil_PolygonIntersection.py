@@ -6,8 +6,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -23,7 +23,7 @@
 
 __author__ = 'Michael Kürbs'
 __date__ = '2018-12-21'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
@@ -58,7 +58,8 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
     """
     Get the intersections from a polygon layer with the baseline and transform them to profile coordinates.
     The intersection range can be represented through points or lines.
-    Select a line feature or use an one feature layer as Baseline.
+    A baseline can have breakpoints.
+    Select one line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -201,53 +202,73 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                 featuresWithZ=tm.addZtoPointFeatures(schnittpunkte, crsProject, layerZFieldId)
             
             else: #0 Lines
-                #calculate Z-Values for SchnittLines
-                for schnittLineFeat in schnittLinien:
-                    featZ = QgsFeature(schnittLineFeat)
-                    linRef = LinearReferencingMaschine(schnittLineFeat.geometry(), crsProject, feedback)
-                    line3D = self.calc3DProfile(linRef, tm, crsProject)
-                    featZ.setGeometry(line3D)
-                    featZ.setAttributes(schnittLineFeat.attributes())
-                    featuresWithZ.append(featZ)
+                if schnittLinien is None or len(schnittLinien)==0:
+                    msg = self.tr("No polygon feature is intersecting this baseline!")
+                    feedback.reportError(msg)
+                else:
+                    #calculate Z-Values for SchnittLines
+                    for schnittLineFeat in schnittLinien:
+                        featZ = QgsFeature(schnittLineFeat)
+                        linRef = LinearReferencingMaschine(schnittLineFeat.geometry(), crsProject, feedback)
+                        line3D = self.calc3DProfile(linRef, tm, crsProject)
+                        featZ.setGeometry(line3D)
+                        featZ.setAttributes(schnittLineFeat.attributes())
+                        featuresWithZ.append(featZ)
 
-            #config Output
-            try:
-                newFields=featuresWithZ[0].fields()
-                wkbTyp=featuresWithZ[0].geometry().wkbType()
-            except Indexerror:
-                msg = self.tr("No Z values could be assigned to the Geometries.")
-                feedback.reportError(msg)
 
-                raise QgsProcessingException(msg)
-            (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-            context, newFields, wkbTyp, crsProject)
+            if not featuresWithZ is None:
 
-            #create geometries as profil coordinates
-            profilFeatures=[]
-            iFeat=0
-            for current, srcFeat in enumerate(featuresWithZ):
-                # Stop the algorithm if cancel button has been clicked
-                if feedback.isCanceled():
-                    break
-                srcGeom=srcFeat.geometry()
-                profilGeometries=lp.extractProfilGeom(srcGeom, ueberhoehung, lp.srcProfilLine)
-                #feedback.pushInfo("b " + str(srcFeat.attributes())+ ""+ str(profilGeometries))
-                for profilGeom in profilGeometries:
-                    # build a Feature
-                    profilFeat = QgsFeature(newFields)   
-                    profilFeat.setGeometry(profilGeom)
-                    profilFeat.setAttributes(srcFeat.attributes())
-                    # Add a feature in the sink
-                    sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
-                    iFeat=iFeat+1
-                    feedback.pushInfo(str(profilFeat.attributes()))
-                # Update the progress bar
-                feedback.setProgress(int(current * total))
 
-            msgInfo=self.tr("{0} intersection features where transformed to profile coordinates:").format(iFeat)
-            feedback.pushInfo(msgInfo)
-            # Return the results of the algorithm. In this case our only result is
-            return {self.OUTPUT: dest_id}
+
+                if len(featuresWithZ)==0:
+                    feedback.reportError("No Features was added with z values.")
+                    return {self.OUTPUT: 0}
+                else:
+
+                    newFields=[]
+                    try:
+                        newFields=featuresWithZ[0].fields()
+                        wkbTyp=featuresWithZ[0].geometry().wkbType()
+                    except IndexError:
+                        msg = self.tr("No Z values could be assigned to the Geometries.")
+                        feedback.reportError(msg)
+                        raise QgsProcessingException(msg)
+
+                    #config Output
+                    (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
+                    context, newFields, wkbTyp, crsProject)
+                
+
+                    #create geometries as profil coordinates
+                    profilFeatures=[]
+                    iFeat=0
+                    for current, srcFeat in enumerate(featuresWithZ):
+                        # Stop the algorithm if cancel button has been clicked
+                        if feedback.isCanceled():
+                            return {self.OUTPUT: dest_id}
+                            #break
+                        srcGeom=srcFeat.geometry()
+                        if srcGeom.isGeosValid():
+                            profilGeometries=lp.extractProfilGeom(srcGeom, ueberhoehung, lp.srcProfilLine)
+                            #feedback.pushInfo("b " + str(srcFeat.attributes())+ ""+ str(profilGeometries))
+                            for profilGeom in profilGeometries:
+                                # build a Feature
+                                profilFeat = QgsFeature(newFields)   
+                                profilFeat.setGeometry(profilGeom)
+                                profilFeat.setAttributes(srcFeat.attributes())
+                                # Add a feature in the sink
+                                sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
+                                iFeat=iFeat+1
+                                feedback.pushInfo(str(profilFeat.attributes()))
+                        else:
+                            feedback.reportError( str( srcFeat.attributes() ) + srcGeom.asWkt() )
+                        # Update the progress bar
+                        feedback.setProgress(int(current * total))
+
+                    msgInfo=self.tr("{0} intersection features where transformed to profile coordinates:").format(iFeat)
+                    feedback.pushInfo(msgInfo)
+                    # Return the results of the algorithm. In this case our only result is
+                    return {self.OUTPUT: dest_id}
 
     def name(self):
         """

@@ -55,7 +55,8 @@ import os
 class TransformToProfil_Gradient(QgsProcessingAlgorithm):
     """
     Transforms a single Line to profile coordinates with considering of elevation.
-    Select a line feature or use an one feature layer as Baseline.
+    A baseline can have breakpoints.
+    Select one line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be

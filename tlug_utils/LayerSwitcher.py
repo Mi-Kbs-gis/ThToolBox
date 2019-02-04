@@ -6,8 +6,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2017-10-25
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -23,7 +23,7 @@
 
 __author__ = 'Michael Kürbs'
 __date__ = '2018-07-31'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtCore import QObject

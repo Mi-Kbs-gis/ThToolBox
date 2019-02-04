@@ -3,11 +3,11 @@
 /***************************************************************************
  TlugProcessing
                                  A QGIS plugin
- TLUG Algorithms
+ TLUBN Algorithms
                               -------------------
         begin                : 2017-10-25
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -22,8 +22,8 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-12-21'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2019-01-18'
+__copyright__ = '(C) 2018 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
@@ -55,7 +55,8 @@ import os
 class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
     """
     Get the intersections from a line layer with the baseline and transform them to profile coordinates.
-    Select a line feature or use an one feature layer as Baseline.
+    A baseline can have breakpoints.
+    Select one line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -182,8 +183,6 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         if self.isLineType(lineLayer):
             #get intersection point features
             schnittpunkte=self.getSchnittpunkteAusLinien(featuresOnLine, lineLayer.crs(), lp, feedback) #Um Attribute der geschnittenen Objekte zu uebernehmen, muss hier mehr uebergeben werden
-            
-            
             #calculate Z-Values
             featuresWithZ=tm.addZtoPointFeatures(schnittpunkte, crsProject, layerZFieldId)
             #config Output
@@ -331,21 +330,26 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
                     tempGeom.transform(trafo,QgsCoordinateTransform.ForwardTransform, False)
 
                 if tempGeom.isMultipart:
-                    #feedback.pushInfo(str(iMulti) + str(type(feat.geometry())))
                     multiGeom = tempGeom.asMultiPolyline()
+                    #for singleLine in tempGeom.parts(): #ab QGIS 3.6
                     for singleLineVertices in multiGeom:  ############## Achtung normalerweise wird diese Schleife zum Auflösen des Multiparts benoetigt
                         points=[]
                         for pxy in singleLineVertices:
                             points.append(QgsPoint(pxy.x(), pxy.y()))
                         singleLine=QgsGeometry().fromPolyline(points)
-                        
-                        #feedback.pushInfo(str(iMulti) + str(type(singleLine)) + str(singleLineVertices))
-                        
-                        schnittpunktFeaturesOfThisLine = self.makeIntersectionFeatures(feat, singleLine, laengsProfil, fields, feedback)
+                            
+                        #feedback.pushInfo(str(iMulti) + " MultiGeom: " + str(type(feat.geometry())))
+                        #feedback.pushInfo( str( singleLine.asWkt() ) +"\n"+ str(singleLineVertices))
+                            
+                        schnittpunktFeaturesOfThisLinePart = self.makeIntersectionFeatures(feat, singleLine, laengsProfil, fields, feedback)
+                        #feedback.pushInfo("Multi-Schnittpunkte: " + str( schnittpunktFeaturesOfThisLinePart ) )
+                        for item in schnittpunktFeaturesOfThisLinePart:
+                            schnittpunktFeaturesOfThisLine.append(item)
                         iMulti=iMulti+1
 
                 
                 else: # single Geometry
+                    #feedback.pushInfo("singleGeom: " + str(type(feat.geometry())))
                     schnittpunktFeaturesOfThisLine = self.makeIntersectionFeatures(feat, tempGeom, laengsProfil, fields, feedback)
                 
                 #add to list
@@ -365,38 +369,43 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         return schnittpunktFeatures
 
     # this function create a list of point features with intersection Points
-    def makeIntersectionFeatures(self, feat, geom,  laengsProfil, newfields,  feedback):
+    def makeIntersectionFeatures(self, feat, line,  laengsProfil, newfields,  feedback):
         schnittpunktFeatures=[]
         countPoints=0
         #explode polyline, get each line segment as LineString in a list
         try:
 
-            linesOfPolyLine = self.extractLineSegments(geom)
+            linesOfPolyLine = self.extractLineSegments(line)
         except:
-            msg = self.tr("Error: Explode Line Segments for Geometry {0} Feature {1}").format(geom.asWkt(), feat.attributes())
+            msg = self.tr("Error: Explode Line Segments for Geometry {0} Feature {1}").format(line.asWkt(), feat.attributes())
             feedback.reportError(msg)
             raise QgsProcessingException(msg)
-        
-        for lineP in linesOfPolyLine:
-            #get all Intersection Points
-            intersectionPoints, stations=laengsProfil.linearRef.getIntersectionPointofPolyLine(lineP)
-            if not intersectionPoints is None:
-                for i in range(len(intersectionPoints)):
-                    try:
-                        pt=intersectionPoints[i].asPoint()
-                        
-                        schnittPunktFeat=QgsFeature(newfields) #Feature with extra attribut
-                        schnittPunktFeat.setGeometry(intersectionPoints[i])
-                        attrs=feat.attributes()
-                        attrs.append(stations[i]) # station is saved in extra Attribute
-                        #set new attributes with station
-                        schnittPunktFeat.setAttributes(attrs)                               
-                        schnittpunktFeatures.append(schnittPunktFeat)
-                        #feedback.pushInfo(str(attrs))
+        intersectionPoints=[]
+        stations=[]
+        #get Intersection Points for each line seqment and add to list's
+        for iSeq,lineP in enumerate(linesOfPolyLine):
+            points, stats=laengsProfil.linearRef.getIntersectionPointofPolyLine(lineP)
+            if not points is None and not stats is None:
+                for i, point in enumerate(points):
+                    intersectionPoints.append( point )
+                    stations.append( stats[i] )
+        #make features from the intersection points and take over the line attributes
+        if not intersectionPoints is None:
+            for i in range( len( intersectionPoints ) ):
+                try:
+                    pt=intersectionPoints[i].asPoint()
+                    
+                    schnittPunktFeat=QgsFeature(newfields) #Feature with extra attribut
+                    schnittPunktFeat.setGeometry(intersectionPoints[i])
+                    attrs=feat.attributes()
+                    attrs.append(stations[i]) # station is saved in extra Attribute
+                    #set new attributes with station
+                    schnittPunktFeat.setAttributes(attrs)                               
+                    schnittpunktFeatures.append(schnittPunktFeat)
 
-                    except:
-                        msg = self.tr("Error: Creating Intesections Geometry {0} Feature {1}").format(str(type(intersectionPoints[i].geometry())), str(intersectionPoints[i].attributes()))
-                        feedback.reportError(msg)
-                        raise QgsProcessingException(msg)
+                except:
+                    msg = self.tr("Error: Creating Intesections Geometry {0} Feature {1}").format(str(type(intersectionPoints[i].geometry())), str(intersectionPoints[i].attributes()))
+                    feedback.reportError(msg)
+                    raise QgsProcessingException(msg)
             
         return schnittpunktFeatures

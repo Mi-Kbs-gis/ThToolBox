@@ -6,8 +6,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -22,8 +22,8 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-12-21'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2019-01-07'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
@@ -65,8 +65,8 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
     If the points have no realtionship to an elevation value, elevation is used from a Raster DEM.
     This Function is processing only the points inside a buffer around the Baseline or if there is a selection, all selected points.
     Extrapolation is not supported. Points have to be perpendicular to the baseline.
-    To create vertical lines (bore axis) use Dept Start and Dept End from freature attributes.
-    Select a line feature or use an one feature layer as Baseline.
+    Select one line feature or use an one feature layer as Baseline.
+	A baseline can have breakpoints.
     If the baseline is a polylinestring, there could be blind spots. Points in blind spots will be ignored.
     """
 
@@ -289,7 +289,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
 
         #Handling of the depth settings, make vertikal lines from depth attributes
         wkbTyp=None #Output Geometry Type
-        fidx=[None, None] #Field Indizes for the Z values
+        #fidx=[None, None] #Field Indizes for the Z values
         modusDepth=-1
         if endZFieldName=="" and startZFieldName=="": #No Depth
             modusDepth=1
@@ -299,12 +299,17 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
             if endZFieldName and startZFieldName:
                 idx1 = pointLayer.fields().lookupField(startZFieldName)
                 idx2 = pointLayer.fields().lookupField(endZFieldName)
-                fidx=[idx1, idx2]
+                #fidx=[idx1, idx2]
                 modusDepth=2
             elif endZFieldName and startZFieldName=="":
-                fidx=[-1, idx2]
+
+                idx1 = -1
+                idx2 = pointLayer.fields().lookupField(endZFieldName)
+                #fidx=[-1, idx2]
             elif endZFieldName=="" and startZFieldName:
-                fidx=[idx1, -1]
+                idx1 = pointLayer.fields().lookupField(startZFieldName)
+                idx2 = -1
+                #fidx=[idx1, -1]
 
             wkbTyp=QgsWkbTypes.LineString
             #erzeuge 3D-Linien fuer den Bohraufschluss im Project-Crs
@@ -440,17 +445,26 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
             #create a Line Geometry
             if tiefeVonIdx==-1:
                 tiefeVon=srcFeat.geometry().vertexAt(0).z()
+                tiefeVon=0
             
             else:
                 tiefeVon=srcFeat.attribute(tiefeVonIdx)
             if tiefeBisIdx==-1:
                 tiefeBis=srcFeat.geometry().vertexAt(0).z()
+                tiefeBis=0
             
             else:
-                tiefeBis=srcFeat.attribute(tiefeVonIdx)         
+                tiefeBis=srcFeat.attribute(tiefeBisIdx)         
             
-            tiefeBis=srcFeat.attribute(tiefeBisIdx)
-            #feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
+            #tiefeBis=srcFeat.attribute(tiefeBisIdx)
+            if tiefeBis is None or str(tiefeBis)=="":
+                tiefeBis=0
+                feedback.pushInfo("tiefeBis:"+str(tiefeBis))
+            if tiefeVon is None or str(tiefeVon)=="":
+                tiefeVon=0
+                feedback.pushInfo("tiefeVon:" + str(tiefeVon))
+            
+            feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
             inputGeom = srcFeat.geometry().vertexAt(0)
             pVon=self.polarerAnhaenger3D(inputGeom,  tiefeVon, richtungHz, azimut, feedback)
             pBis=self.polarerAnhaenger3D(inputGeom,  tiefeBis, richtungHz, azimut, feedback)

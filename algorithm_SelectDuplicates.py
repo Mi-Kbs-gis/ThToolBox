@@ -7,8 +7,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2017-10-25
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -23,7 +23,7 @@
 
 __author__ = 'Michael Kürbs'
 __date__ = '2018-12-21'
-__copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 

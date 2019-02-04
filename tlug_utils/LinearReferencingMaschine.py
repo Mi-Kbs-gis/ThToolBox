@@ -3,11 +3,11 @@
 /***************************************************************************
  TlugProcessing
                                  LinearReferencingMaschine
- TLUG Algorithms
+ TLUBN Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -22,8 +22,8 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-10-10'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2019-01-18'
+__copyright__ = '(C) 2019 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 from qgis.core import *
 from qgis.PyQt.QtCore import QObject
@@ -37,6 +37,14 @@ class LinearReferencingMaschine(QObject):
         self.crs=crs
         #self.profilLine3d
         self.lineSegments=self.extractLineSegments(profilLine)
+        self.isSimpleLine=self.isA2PointLineString(profilLine)
+    
+    def isA2PointLineString(self, geom):
+        points=[vertex for vertex in geom.vertices()]
+        if len(points)==2:
+            return True
+        else:
+            return False
         
     def extractLineSegments(self, geom):
         points=self.getVertices(geom)
@@ -288,7 +296,7 @@ class LinearReferencingMaschine(QObject):
         #If the value of t1 is between 0 and 1, the intersection ist between the points 1 and 2
         if t1>-0.000001 and t1<1.000001: #
             pass
-        else:
+        elif self.isSimpleLine==False: # Wenn Punkt außerhalb des Linensegments liegt und die Achse mehrere Stützpunkte hat, abbrechen
             #print("Punkt liegt nicht lotrecht auf Basislinie")
             return None, None
         
@@ -561,38 +569,42 @@ class LinearReferencingMaschine(QObject):
             print("Station und Abstand konnte nicht aus Koordinaten ermittelt werden!", "Punkt liegt außerhalb der Abschnittsgeometrie!")
             return None
 
-    def getIntersectionPointofPolyLine(self, line1):
+    def getIntersectionPointsofPolyLine(self, line1):
         pointList=[]
         stations=[]
         baseStation=0
         anyPoint=False
         i=0
-        for segmentAufProfil in self.lineSegments:
-            pt, stationOnSegment = self.getIntersectionPointofSegment(line1, segmentAufProfil)
+        for linRefSegment in self.lineSegments: #iterate all seqments of the baseLine, it can included breakpoints
+            #look for an intersection for each line seqmenent of the baseline
+            pt, stationOnSegment = self.getIntersectionPointofSegment(line1, linRefSegment)
             if not pt is None and not stationOnSegment is None:
+                #self.feedback.pushInfo("pt,Station: " + str(pt) + " " + str(stationOnSegment))
                 anyPoint=True
                 curStation=baseStation + stationOnSegment
                 pointList.append(pt)
                 stations.append(curStation)
                 #if baseStation < 37000 and baseStation > 0:
-                #    print("Schnittpunkt", pt.asWkt(), baseStation, stationOnSegment, curStation)
+                #self.feedback.pushInfo("Schnittpunkt"+"\t"+ pt.asWkt()+"\t"+  str(baseStation)+"\t"+  str(stationOnSegment)+"\t"+  str(curStation))
 
-            baseStation=baseStation + segmentAufProfil.length()
+            baseStation=baseStation + linRefSegment.length()
             i=i+1
         #print(i, "Segmente auf der Basislinie auf Schnittpunkte durchsucht")
         if anyPoint:
+
             return pointList, stations #QgsPoint(), float()
         else:
             return None, None
         
-
+    # gets the intersection point of two line seqments
     def getIntersectionPointofSegment(self, baseLine, line2): #BaseLine ist die Linie auf der die Station angebeben werden soll
 
         station=None
 
         baseLinePoints=baseLine.asPolyline()
         linePoints=line2.asPolyline() #ist ein Feld mit allen Punkten
-        
+        #self.feedback.pushInfo( "Baseline " + str(baseLinePoints))
+        #self.feedback.pushInfo( "schnittLine " + str(linePoints))
        
         #3. Ansatz Analytische Geometrie --Schnittpunktzweier Geraden
         #print(linePoints)
@@ -652,7 +664,8 @@ class LinearReferencingMaschine(QObject):
         elif t1>-0.000001 and t1<1.000001 and t2>-0.000001 and t2<1.000001: #
             #self.feedback.pushInfo("t2: "+str(t2)+" t1: " + str(t1) + " " + str(baseLine))
             pass
-        else:
+        elif self.isSimpleLine==False:  # Wenn Punkt außerhalb des Linensegments liegt und die Achse mehrere Stützpunkte hat, abbrechen
+            
             # no intersection
             
             return None, None
@@ -681,7 +694,7 @@ class LinearReferencingMaschine(QObject):
         dy=ys-y3
         station=math.sqrt(dx*dx+dy*dy)
         #print("Station:",station)
-            
+        #self.feedback.pushInfo("Intersection: " + str(xs) + " " + str(ys))
         return  QgsGeometry.fromPointXY(QgsPointXY(xs,ys)), station
 
     def verdichtePunkte(self, dichte): # Dichte in meter
@@ -811,7 +824,6 @@ class LinearReferencingMaschine(QObject):
                             rwPoints.append( rwPoint3D )
                         polygons.append( rwPoints )
                         zPolyLines.append( QgsGeometry().fromPolyline( rwPoints ) )
-                    break #nur ein Loop, da sonst duplicate
                 realWorldGeom=QgsGeometry()
                 wktMPZ=""
                 for ir, ring in enumerate(zPolyLines):
@@ -874,8 +886,14 @@ class LinearReferencingMaschine(QObject):
         for line in self.lineSegments:
             if not pRW is None:
                 break
+
             #is point an this segment
+            isOnSegment=False
             if round(station, 3) < round(curStation + line.length(),3) and round(station,3) > round(curStation,3):
+                isOnSegment=True
+
+
+            if self.isSimpleLine==True or isOnSegment==True:
                 p1 = line.vertexAt(0)         
                 p2 = line.vertexAt(1) 
                 #Deltas 1->2

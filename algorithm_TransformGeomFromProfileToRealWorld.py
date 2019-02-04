@@ -3,11 +3,11 @@
 /***************************************************************************
  TlugProcessing
                                  TransformGeomFromProfileToRealWorld
- TLUG Algorithms
+ TLUBN Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -22,8 +22,8 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-12-21'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__date__ = '2019-02-04'
+__copyright__ = '(C) 2019 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
 
@@ -55,13 +55,16 @@ from qgis.core import (QgsProcessing,
 from .tlug_utils.LinearReferencingMaschine import LinearReferencingMaschine
 from .tlug_utils.TerrainModel import TerrainModel
 from .tlug_utils.LaengsProfil import LaengsProfil
+from .tlug_utils.LayerUtils import LayerUtils
 from PyQt5.QtGui import QIcon
 import os
+import math
 
 class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
     """
     Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
-    Select a line feature or use an one feature layer as Baseline.
+    A baseline can have breakpoints.
+    Select one line feature or use an one feature layer as Baseline.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -184,9 +187,6 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
             #transform BaseLine
             opResult=baseLine.transform(trafo,QgsCoordinateTransform.ForwardTransform, False)
 
-        #tm=TerrainModel(rasterLayer, feedback)
-        #lp=LaengsProfil(baseLine, tm, crsProject, feedback) # use baseLine in Projekt.crs
-        #lp.calc3DProfile()
         
         linRef = LinearReferencingMaschine(baseLine, crsProject, feedback)
         
@@ -200,10 +200,17 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
             feedback.reportError(msg)
             raise QgsProcessingException(msg)
         
-        
+        #check Selection of Inputlayer
+        #if yes, use just the selection
+        processfeatures=None
+        if len(vectorLayer.selectedFeatures()) == 0:
+            processfeatures = vectorLayer.getFeatures()
+        else:
+            processfeatures = vectorLayer.selectedFeatures() 
+
         
         i=0
-        for feat in vectorLayer.getFeatures():
+        for feat in processfeatures: #vectorLayer.getFeatures():
 
             abstand=0
             offsetExprContext.setFeature( feat )
@@ -221,24 +228,53 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
                 msg = self.tr("Error Offset Experession result must be numeric, not " + str( type( abstand )) )
                 feedback.reportError(msg)
                 raise QgsProcessingException(msg)
+                
+            subFeatureList=[]
 
-            #if not offsetFieldIndex == -1:
-            #    abstand=feat.attribute(offsetFieldIndex)
-            #feedback.pushInfo("GeometryType: " + str( vectorLayer.geometryType() ) + " name: " + vectorLayer.name() + " Feat: " + str( feat.geometry().wkbType() ) )
-            if vectorLayer.geometryType() == 2: #Polygon
-                # fill Vertices with Baseline-Breakpoints
-                feat.setGeometry( self.fillPolygonVertices( feat.geometry() , linRef, crsProject, feedback) )
-            #Create Real World geometry with LinearReferencingMaschine
-            realWorldFeat=linRef.transformProfileFeatureToRealWorld(feat, vectorLayer.crs(), feedback, abstand, ueberhoehung)
+            layerUtils=LayerUtils( crsProject, feedback)
+            subFeatureList=layerUtils.multiPartToSinglePartFeature( feat )
+
+            #preparation of profile geometrys
+            prepSubFeatureList=[]
+            for iP, f in enumerate(subFeatureList):
+                if linRef.isSimpleLine or vectorLayer.geometryType() == 0 or vectorLayer.geometryType() == 1: #Point (Line nur temporär):
+                    prepSubFeatureList.append( f ) #keep old feature                
+                else:
+                    # Basisline hat Knickpunkte, Profilgeometrien müssen ggf. mit zusätzlichen Stützpunkten gefüllt werden
+                    # Baseline has breakpoints, we have to fill the profile geometrys with additional vertices
+                    filledSingleGeom = None
+                    if vectorLayer.geometryType() == 2: #Polygon
+                        filledSingleGeomList = self.fillPolygonVertices( f.geometry() , linRef, crsProject, feedback)
+                    #elif vectorLayer.geometryType() == 1: #Line
+                    
+                    if len(filledSingleGeomList) > 0:
+                        for g in filledSingleGeomList:
+                            #create a feature for each filled sub geometry
+                            filledFeature=QgsFeature( f )
+                            filledFeature.setGeometry( g )
+                            filledFeature.setAttributes( f.attributes() )
+                            prepSubFeatureList.append( filledFeature )
+                    else:
+                        prepSubFeatureList.append( f ) #keep old feature
+                        feedback.reportError( "Feature geometry can not be filled: " + str( f.attributes() ) )
 
 
-            #Erzeuge Feature
-#            realWorldFeat.setGeometry(realWorldFeat.geometry())
-#            realWorldFeat.setAttributes(feat.attributes())
-            #feedback.pushInfo(str(i) + ": " + realWorldFeat.geometry().asWkt())
-
-            # Add a feature in the sink
-            sink.addFeature(realWorldFeat, QgsFeatureSink.FastInsert)
+                
+            #Back to Real World Transformation for each sub Feature
+            realWorldSubFeatureList=[]
+            for pFeat in prepSubFeatureList:
+            
+                #Create Real World geometry with LinearReferencingMaschine
+                realWorldFeat=linRef.transformProfileFeatureToRealWorld( pFeat, vectorLayer.crs(), feedback, abstand, ueberhoehung )
+                realWorldSubFeatureList.append( realWorldFeat )
+                
+            ##### ggf features könnten hier wieder gruppiert werden ######
+                
+            #write real worl Features to output layer
+            for rwFeat in realWorldSubFeatureList:
+                sink.addFeature(rwFeat, QgsFeatureSink.FastInsert)
+ 
+ 
             i=i+1
             # Update the progress bar
             feedback.setProgress(int(i * total))
@@ -301,127 +337,251 @@ class TransformGeomFromProfileToRealWorld(QgsProcessingAlgorithm):
     def createInstance(self):
         return TransformGeomFromProfileToRealWorld()
 
-        
+    #This function add's new vertices to a polygon geometry in preparation vor retransform a profile object(polygon) back to a real-world feature, if the profile baseline has vertices 
     #Diese Funktion füllt ein ProfilPolygon mit den Stützpunkten der Basislinie auf
-    #Es entsteht ein Multipolygon
+    #Wenn die Profil-Basislinie Knickpunkte hat, müssen die zu überführendes Objekt geprüft werden, ob sie entlang eines solchen Knickes verlaufen.
+    #Falls ja, muss in der Profilgeometrie des Objektes der Knick als Vertikale Unterbrechung mit eingefügt werden
+    #Es entsteht ein Array mit Single Polygonen [Polygon]
     def fillPolygonVertices(self, polygon, linRef, crs, feedback):
-
-        listPointStation=[] #[pt, station, isBreakLine(Boolean) ]
     
         #Vertices in profil coordinates
+        
+        #Check if the profile baseline has breakpointserstelle. If yes, create vertikal break lines for intersection with profile objects
+        #Falls die Profil-Basislinie Knickpunkte hat erstelle vertikale Linien zur Verscheideung mit den Profilobjekten
         verticalLines = []
         for vertex in linRef.profilLine.vertices():
             station, abstand = linRef.transformToLineCoords( vertex )
 
             p1 = QgsPoint( station, 100000 )
             p2 = QgsPoint( station, -100000 )
-            verticalLines.append( QgsGeometry().fromPolyline( [p1, p2]) )       #erstelle vertikale Linien an jedem Punkt der Basislinie
-            
+            verticalLines.append( QgsGeometry().fromPolyline( [p1, p2]) )       
 
-        #Polygon as Polyline
-        lineGeom = QgsGeometry().fromPolylineXY( polygon.asPolygon()[0] )
-        #get Intersections Polygon with vertikal lines
+        #bereite polygone vor, für Schnittpunkt-Ermittlung
+        #preparate polygons for Intersection point determination
+        polygons=[]
+        lineGeom = None
+        if polygon.isMultipart():
+            #darf nicht sein!!
+            msg = self.tr("Multipolygon konnte nicht aufgeteilt werden!")
+            feedback.reportError(msg)
+            raise QgsProcessingException(msg)
+
+        else:
+
+            #Polygon as Polyline
+            lineGeom = QgsGeometry().fromPolylineXY( polygon.asPolygon()[0] )#( polygon.asPolygon()[0] )
+            #feedback.pushInfo("PreFillPolygon " + str( lineGeom.asWkt() ))
+        #get Intersection point from Polygon with vertikal lines
         #create LinearReferencingMaschine for Polygon-Ring in Profil coordinates
+        #Für den Umring des Polygons müssen die Schnittpunkte mit den vertikalen Unterbrechnungslinien ermittelt werden
+        #Dazu wird für den Umring die Lineare Referenzierung genutzt, welche bereits eine Funktion hat, die den Schnittpunkt mit einer Linie ermittelt  
+        
         linRefPolygon = LinearReferencingMaschine(lineGeom , crs, feedback )
         curStation = 0
         lastPoint=None
         hasIntersection=False
-        #look for each line segment of the Ring if intersect a vertical line
+        #Liste der Punkte des Polygons, inklusive der zusätzlich Stützpunkte an den Schnittpunkten mit den vertikalen Unterbrechungen
+        #List the polygons points included the additional vertices at the vertical lines intersections 
+        listPointStation=[] #[pt, station, isBreakLine(Boolean) ]
+        
+        #add the vertices of this polygon
         for segment in linRefPolygon.lineSegments:
-            p1 = segment.vertexAt(0)
-            listPointStation.append( [ p1, curStation, p1.x(),  False ] )
-
-            for vLine in verticalLines:
-                #feedback.pushInfo(str(curStation)+" Line: " + vLine.asWkt() + " Segment: " + segment.asWkt())
-                pt, stationOnSegment = linRefPolygon.getIntersectionPointofSegment( vLine, segment )
-                if not pt is None and not stationOnSegment is None:
-                    station = curStation + stationOnSegment
-                    p = QgsPoint( pt.asPoint()[0], pt.asPoint()[1] )
-                    listPointStation.append( [ p, station, p.x(), True] )
-                    hasIntersection=True
-              
-            
+            pi = segment.vertexAt(0)
             lastPoint=segment.vertexAt(1)
+            #First vertex to list 
+            listPointStation.append( [ pi, curStation, pi.x(),  False ] )
             curStation = curStation + segment.length()
-        
-        if not hasIntersection:
-            feedback.pushInfo( polygon.asWkt() )
-            return polygon #No Polygon manipulation needed
-        
-        #add last Point of Polygon
-        listPointStation.append( [lastPoint, curStation, lastPoint.x(), False] )
-        # sortiere nach x (Station)
-        listPointStation.sort( key=lambda x: x[2]) 
+        listPointStation.append( [ lastPoint, curStation, lastPoint.x(),  False ] )
 
-        
-        polygonItems = []
-        itemsPolygon =[]
-        iBreakPoint = 0
-        lastCurBreakItems=[]
-        curBreakItems=[]
-        hasBreakpoints=False
-        #curBreakItems müssen noch zu nächsten hinzugefügt werden
-        for elem in listPointStation:
-            itemsPolygon.append( elem )
-            isBreakPoint = elem[3]
-
-
-            if isBreakPoint:
-                curBreakItems.append(elem)
-                iBreakPoint=iBreakPoint + 1
-                hasBreakpoints=True
-                if iBreakPoint == 2:
-                    polygonItems.append( itemsPolygon )
-                    itemsPolygon = []
-                    iBreakPoint = 0
+        #look, if there are breaks related of the vertical line intersection
+        #prüfe, ob es Unterbrechungen durch die vertikalen Unterbrechnungslinien gibt und füge sie zur Stützpunktliste hinzu           
+        breaks=[] # List of [ [break, break, ..], [break, break, break, ..],[break, break, ..]   ]
+        breakPoints=[]
+        for vLine in verticalLines:
+            #feedback.pushInfo(str(curStation)+" Line: " + vLine.asWkt() + " Segment: " + segment.asWkt())
+            #Schnittpunkt
+            try:
+                pts, stationOnSegments = linRefPolygon.getIntersectionPointsofPolyLine( vLine ) #getIntersectionPointofSegment( vLine, segment )
+                if not pts is None and not stationOnSegments is None:
+                    #es können mehrere Schnittpunkte sein
+                    #feedback.pushInfo("Schnittpunkte: " + str( len(pts) ) )
                     
-                    #add Breakpoints
-                    for breakItem in lastCurBreakItems: #always 2
-                        itemsPolygon.append( breakItem ) 
-                    # clear Breakpoints
-                    lastCurBreakItems = curBreakItems # merke die 2 Breakpoints für das nächste Polygon
-                    curBreakItems = []
+                    for i, pnt in enumerate(pts):
+                        stationOnRing = stationOnSegments[i] #Station auf Polygonumring
+                        p = QgsPoint( pnt.asPoint()[0], pnt.asPoint()[1] )
+                        #Schnittpunkt kommt mit in Punktliste des Teil-Polygons
+                        listPointStation.append( [ p, stationOnRing, p.x(), True] )
+                        breakPoints.append( [ p, stationOnRing, p.x(), True] )
+                        #feedback.pushInfo("_ " + str( p.asWkt() ))
+                        hasIntersection=True
+                    #breaks.append( lineBreakPoints )
+            except Exception as err:
+                msg = self.tr("Fehler beim Holen der Schnittpunkte mit den Vertikalen Unterbrechungen!")
+                feedback.reportError(msg  +" "+ str(err.args) + ";" + str(repr(err)))
+                raise QgsProcessingException(msg)
 
-    
-        #add Breakpoints to last polygon of the Multipolygon
-        if len( itemsPolygon ) > 0:
-            polygonItems.append( itemsPolygon )
-            if hasBreakpoints==True:
-                #add Breakpoints
-                for breakItem in lastCurBreakItems: #always 2
-                    itemsPolygon.append( breakItem ) # merke die 2 Breakpoints für das nächste Polygon
+        #Falls keine Überschneidung mit einer Unterbrechungslinie, ausgangspolygon beibehalten werden
+        #If no intersection with vertical lines, keep source polygon
+        if not hasIntersection:
+            #feedback.pushInfo( polygon.asWkt() )
+            return [polygon] #No Polygon manipulation needed
+            
+        try:
+            if len(listPointStation)==0:
+                msg = self.tr("Fehler Liste listPointStation ist leer.")
+                raise QgsProcessingException(msg)
+                #return []
+        except Exception as err:
+            msg = self.tr("Fehler Liste listPointStation ist None.")
+            #feedback.reportError(msg  +" "+ str(err.args) + ";" + str(repr(err)))
+            raise QgsProcessingException(msg)
 
-        multiGeom = QgsGeometry()
+        
+        # sortiere nach x (Station)
+        # sort by x (station-based)
+        listPointStation.sort( key=lambda x: x[2]) 
+        breakPoints.sort( key=lambda x: x[2]) 
+        
+        try:
+            polygonItems = self.splitListPointStationByXBreaks(listPointStation, breakPoints, feedback)
+            feedback.pushInfo("Polygone was separated by baseLine vertices to " + str( len( polygonItems ) ) + " parts.")
+
+        except Exception as err:
+            msg = self.tr("Fehler bei Methode splitListPointStationByXBreaks()")
+            feedback.reportError(msg  +" "+ str(err.args) + ";" + str(repr(err)))
+            raise QgsProcessingException(msg)
+
+
+        #Sortinerung nach Station auf Plygonumring, liefert die richtige Reihenfolge der Polygonstützpunkte
         polygons=[]
-
         for i, pItem in enumerate(polygonItems):
             polygonPoints = []
-            #sortiert die Punkte an Hand der Station (Index 1)
+            #sortiert die Punkte an Hand der Station auf dem Polygonumring(Index 1) um die richtige Punktreihenfolge zu erhalten
+            #order by station on the polygon circle to get the right point sequence for each sub polygon
             pItem.sort( key=lambda x: x[1])
-            feedback.pushInfo(str(i) + " pitem:" + str( pItem ))
+            #feedback.pushInfo(str(i) + " pitem:" + str( pItem ))
+            #feedback.pushInfo( "Wkt" + "\t" +  "part"+ "\t" +  "order" + "\t"+  "statOnRing" + "\t" + "xS" + "\t" + "isBrkPoint" )
             
-            for item in pItem:
+            for j, item in enumerate(pItem):
                 pt=item[0]
-                #feedback.pushInfo("pt: " +  str( type( pt ) ) )
+                isBrkPoint=item[3]
+                statOnRing=item[1]
+                xS=item[2]
+                #feedback.pushInfo( pt.asWkt() + "\t" +  str( i )+ "\t" +  str( j )+ "\t" +  str( statOnRing ) + "\t" + str(xS) + "\t" + str(isBrkPoint) )
                 polygonPoints.append( QgsPointXY( pt.x(), pt.y() ) )
-            #polygonGeom=QgsGeometry().fromPolygonXY( [ polygonPoints ] )
             polygons.append( polygonPoints )
             # if i==0:
                 # multiGeom = polygonGeom
             # else:
                 # multiGeom.addPart( [ polygonPoints ] )
+
+        # neu gebildete Teilpolygone werden einzeln in Liste übergeben
+        # new createt sub polygons will be returned separately in a list [ QgsGeometry ]
+        polygonOutputList=[]
         if len( polygons ) > 1:
-        
+            #feedback.pushInfo("Sub Polygons: ")
+
+            for polyg in polygons:
+                pGeom=QgsGeometry().fromPolygonXY( [ polyg ] )
+                polygonOutputList.append( pGeom )
+                #feedback.pushInfo("End Filled Sub: " + str( pGeom.asWkt() ))
+            multiGeom = QgsGeometry()
             multiGeom = QgsGeometry().fromMultiPolygonXY( [ polygons for polyg in polygons ] )
             #feedback.pushInfo( multiGeom.asWkt() )
-            return multiGeom
+            #feedback.pushInfo("End Filled Multi: " +  multiGeom.asWkt() )
+
+            #return multiGeom
         else: #single Polygon
             singleGeom = QgsGeometry().fromPolygonXY( polygons )
-            #feedback.pushInfo( singleGeom.asWkt() )
+            #feedback.pushInfo("End Filled Single: " +  singleGeom.asWkt() )
+            polygonOutputList.append(singleGeom)
 
-            return singleGeom
-
+            #return singleGeom
+        return polygonOutputList
         
+    def getBreaksAtX(self, x, breakValsX, feedback):
+        breaks=[]
+        i=0
+        for item in breakValsX:
+            xItem=item[2]
+            pt=item[0]
+            isBrkPoint=item[3]
+            statOnRing=item[1] 
+            if xItem==x:
+                breaks.append(item)
+                i=i+1
+
+        return breaks
+
+    def splitListPointStationByXBreaks(self, listPointStation, breakValsX, feedback):
+    
+        itemsPolygon=[]
+        
+        endOfLastSplit=[]
+        iLastSplit=0
+        iBreak=0 
+        curXBreak=-9999999 #set the first xBreak
+        
+        #iLastBreak=-1
+        xLastBreak=-9999999
+        lastBreaks=[]
+        hasNext=True
+        schleifen=0
+        cnt=0 # Counter
+        while(hasNext):
+            try:
+            
+                if iBreak == len(breakValsX):#kein Break mehr vorhanden
+                    tempList=listPointStation[iLastSplit:] #Erstellt einen Slice bis zum Ende
+                    if len(tempList)>0:
+                        if len(lastBreaks) > 0:# Schaue ob es vorherige Breakpoints gibt
+                            for brk in lastBreaks:
+                                tempList.append( brk ) # fügt die vorangegangenen Breakpoints an
+                        itemsPolygon.append(tempList)#Übergebe letztes TeilPolygon
+                    hasNext=False # Beende Schleife
+                elif listPointStation[cnt][2] > breakValsX[iBreak][2]:#Vergleiche X-Wert, 
+                    #Wenn X größer als der X-Wert der aktuellen vertikalen Unterbrechung, dann erstelle Slice
+                    curXBreak=breakValsX[ iBreak ][ 2 ]
+                    tempList=listPointStation[iLastSplit:cnt] #Erstellt einen Slice
+                    if len( tempList ) > 0:
+                        if len(lastBreaks) > 0:# Schaue ob es vorherige Breakpoints gibt
+                            for brk in lastBreaks:
+                                tempList.append( brk ) # fügt die vorangegangenen Breakpoints an
+                        if iBreak < len(breakValsX):
+                            tempList.append( breakValsX[ iBreak ] ) # fügt die abschließenden Breakpoints an
+                            lastBreaks=self.getBreaksAtX( curXBreak, breakValsX, feedback ) #merke Break X-Wert für nachfolgendes TeilPolygon
+                            
+                        iLastSplit=cnt
+                    iBreak=iBreak+1
+                    
+                    #keep cnt
+                    if len(tempList)>0:
+                        itemsPolygon.append(tempList) #Übergebe TeilPolygon
+                    
+
+                    # feedback.pushInfo( "Wkt" + "\t" +  "part"+ "\t" +  "order" + "\t"+  "statOnRing" + "\t" + "xS" + "\t" + "isBrkPoint" )
+                    
+                    # for j, item in enumerate(tempList):
+                        # pt=item[0]
+                        # isBrkPoint=item[3]
+                        # statOnRing=item[1]
+                        # xS=item[2]
+                        # feedback.pushInfo( pt.asWkt() + "\t" +  str( cnt )+ "\t" +  str( j )+ "\t" +  str( statOnRing ) + "\t" + str(xS) + "\t" + str(isBrkPoint) )
+                        
+
+                else:
+                    cnt=cnt+1
+                schleifen=schleifen+1
+            except Exception as err:
+                msg = self.tr("Fehler beim Splitten der Stützpunktliste!")
+                feedback.reportError(msg  +" "+ str(err.args) + ";" + str(repr(err)))
+                raise QgsProcessingException(msg)
+                
+            
+        return itemsPolygon
+        
+    #def createSlice(self, counter, iLastSplit, feedback)
+    
     def interpolateValue( self, a, b, xc): # a and b are lists [xa, ya] and [xb, yb]
         dx=b[0] - a[0] #xb - xa
         dy=b[1] - a[1] #yb - ya

@@ -6,8 +6,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -23,7 +23,7 @@
 
 __author__ = 'Michael Kürbs'
 __date__ = '2018-08-08'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 
 import sys
@@ -170,7 +170,10 @@ class TerrainModel(QObject):
             #geomZ=QgsGeometry.fromWkt(wkt)
             #print(point.asWkt(), "Z:", rastVal, geomZ)
             #print(geomZ.asWkt())
-            pointsListZ.append(QgsPoint(point.x(), point.y(), rastVal))
+            if not rastVal is None:
+                pointsListZ.append(QgsPoint(point.x(), point.y(), rastVal))
+            else: # if nodata 
+                pointsListZ.append(QgsPoint(point.x(), point.y(), 0 ) )#self.nodata
 
         #else:
         #    raise Exception(self.tr('source layer is emty'))

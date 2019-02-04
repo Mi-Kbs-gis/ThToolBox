@@ -9,13 +9,14 @@
 [general]
 name=TlugProcessing
 qgisMinimumVersion=3.0
-description=TLUG Algorithms
-version=2.7
-author=Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-email=Michael.Kuerbs@tlug.thueringen.de
+description=TLUBN Algorithms
+version=2.7.1
+author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+email=Michael.Kuerbs@tlubn.thueringen.de
 
-about=This is a processing tools collection of the Thüringer Landesanstalt für Umwelt und Geologie (TLUG). 
-	<b>To 3D</b>
+about=This is a processing tools collection of the Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN). 
+	<b>File Tools</b>
+	<b>2D -> 3D</b>
 	<b>To Profile Coordinates</b>
 	<b>Vector Seletion</b>
 	<b>Web</b>
@@ -28,7 +29,11 @@ repository=https://github.com/Mi-Kbs-gis/TlugProcessing
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.7 Dez. 21, 2018
+changelog = 2.7.1 Feb. 04, 2019
+		- Organisation TLUG renamed to TLUBN
+		- algorithm "Reverse To Real World" supports MultiPolygon
+		- algorithm "Reverse To Real World" supports baselines with breakpoints
+		2.7 Dez. 21, 2018
 		- new algorithm "Files To Table"
 		- algorithm "Baseline" renamed to "Raster Gradient"
 	2.6 Dez. 17, 2018
@@ -67,7 +72,7 @@ changelog = 2.7 Dez. 21, 2018
 		- First version
 	
 # Tags are comma separated with spaces allowed
-tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample
+tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table
 
 homepage=https://github.com/Mi-Kbs-gis/TlugProcessing
 category=Analysis

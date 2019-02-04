@@ -6,8 +6,8 @@
  TLUG Algorithms
                               -------------------
         begin                : 2018-08-27
-        copyright            : (C) 2017 by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)
-        email                : Michael.Kuerbs@tlug.thueringen.de
+        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -23,7 +23,7 @@
 
 __author__ = 'Michael Kürbs'
 __date__ = '2018-08-08'
-__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 from qgis.PyQt.QtCore import QObject
 from qgis.core import *
@@ -37,12 +37,12 @@ class LaengsProfil(QObject):
     def __init__(self, srcProfilLine, terrainModel, crsProject, feedback):
         self.feedback=feedback
         self.srcProfilLine=srcProfilLine
+        isMulti=self.srcProfilLine.isMultipart
         self.terrainModel=terrainModel
         self.crsProject=crsProject #Projekt.crsProject == srcProfilLine.crsProject!
         #init Linear Referencing
         self.linearRef=LinearReferencingMaschine(srcProfilLine, crsProject, self.feedback)
         self.detailedProfilLine=None
-        
         self.profilLine3d=None
     #Erstellt eine Polyline mit Z-Werten in Rasterauflösung
     def calc3DProfile(self):
@@ -50,11 +50,13 @@ class LaengsProfil(QObject):
         #insert new vertices on raster cells
         self.detailedProfilLine=self.linearRef.verdichtePunkte(self.terrainModel.rasterWidth)
         #sample values from Rasters
-        points3D=self.terrainModel.addZtoPoints(self.detailedProfilLine.vertices(), self.crsProject)
+        points3D = self.terrainModel.addZtoPoints(self.detailedProfilLine.vertices(), self.crsProject)
         #Create Geometry
         profilLine3d=QgsGeometry.fromPolyline(points3D)
+        #self.feedback.pushInfo( profilLine3d.asWkt() )
         self.profilLine3d = profilLine3d
         return profilLine3d
+
         
     #Diese Funktion uebersetzt eine Geometrie in eine ProfilGeometrie, an Hand von Z-Koorinaten und eine Basislinie(X-Achse)
     def extractProfilGeom(self, geom, zFactor, baseLine):
@@ -94,23 +96,26 @@ class LaengsProfil(QObject):
                     for elem in i:
                         pxy=elem.asPoint()
                         station, abstand=self.linearRef.transformToLineCoords(pxy)
-                    
-                        ptProfil=QgsPoint(station, pxy.z() * zFactor)
-                        print(pxy,"-m->", ptProfil.asWkt())
-                        points.append(ptProfil)
+                        if not station is None and not abstand is None:
+                            ptProfil=QgsPoint(station, pxy.z() * zFactor)
+                            #print(pxy,"-m->", ptProfil.asWkt())
+                            points.append(ptProfil)
                     prLine=QgsGeometry().fromPolyline(points)
                     geometries.append(prLine)
-                    print("profilGeom", prLine.asWkt())   
+                    #print("profilGeom", prLine.asWkt())   
             else:# Single Feature
                 points=[]
                 for pxy in geom.vertices():
                     station, abstand=self.linearRef.transformToLineCoords(pxy)
-                    ptProfil=QgsPoint(station, pxy.z() * zFactor)
-                    print(pxy,"-s->", ptProfil.asWkt())
-                    points.append(ptProfil)
+                    if not station is None and not abstand is None:
+                        ptProfil=QgsPoint(station, pxy.z() * zFactor)
+                        #print(pxy,"-s->", ptProfil.asWkt())
+                        points.append(ptProfil)
+                    else:
+                        self.feedback.reportError( "Point " + str( pxy ) + " Profile Coords invalid: " + str(station) +", " +str(abstand) )
                 prLine=QgsGeometry().fromPolyline(points)
                 geometries.append(prLine)
-                print("profilGeom", prLine.asWkt())
+                #print("profilGeom", prLine.asWkt())
     
         elif "Polygon" in geom.asWkt(): # geom.type()==3: # Polygon
             if geom.isMultipart():
