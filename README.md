@@ -1,7 +1,7 @@
 # ThToolBox at master
 
 
-## QGIS Processing Toolbox of TLUG
+## QGIS Processing Toolbox of Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
 ### 2D -> 3D
 
 #### Attach raster values to line vertices
@@ -80,7 +80,7 @@ World files will be created.
 ### Links
 * [ThToolBox](https://plugins.qgis.org/plugins/ThToolBox/) - The PlugIn Website
 * [github](https://github.com/Mi-Kbs-gis/ThToolBox) -GitHub Website
-* [Documentation:de] (https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf)
+* [Documentation:de] (https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf)
 
 
 ### Authors
