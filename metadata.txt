@@ -15,16 +15,17 @@ author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschu
 email=Michael.Kuerbs@tlubn.thueringen.de
 
 about=This is a processing tools collection of the Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN). 
-	<b>File Tools</b>
-	<b>2D -> 3D</b>
-	<b>To Profile Coordinates</b>
-	<b>Vector Seletion</b>
-	<b>Web</b>
+	<p>File Tools</p>
+	<p>2D -> 3D</p>
+	<p>To Profile Coordinates</p>
+	<p>Vector Seletion</p>
+	<p>Web</p>
+	<p><a href='https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf'>Documentation(DE)</a></p>
+	<p><a href="http://tlubn-thueringen.de">TLUBN</a></p>
 
 tracker=https://github.com/Mi-Kbs-gis/ThToolBox/issues
 repository=https://github.com/Mi-Kbs-gis/ThToolBox
-documentation(de)=https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf
-<a href="http://tlubn-thueringen.de">TLUBN</a>
+
 # End of mandatory metadata
 
 # Recommended items:
