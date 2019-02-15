@@ -33,21 +33,21 @@ Transforms a single Line to profile coordinates with considering of elevation.
 On Raster NoDATA-Values, the profile elevation where set to 0.
 Select a line feature or use an one feature layer as Baseline.
 ````
-#### Line - Baseline Intersections
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" style="max-width:100%;"></a></p>
+#### Line - Baseline Intersections
 ````
 Get the intersections from a line layer with the baseline and transform them to profile coordinates.
 Select a line feature or use an one feature layer as Baseline.
 ````
-#### Polygon - Baseline Intersections
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" style="max-width:100%;"></a></p>
+#### Polygon - Baseline Intersections
 ````
 Get the intersections from a polygon layer with the baseline and transform them to profile coordinates.
 The intersection range can be represented through points or lines.
 Select a line feature or use an one feature layer as Baseline.
 ````
-#### Points (incl. Bore Axis)
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Points_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Points_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Points_Logo.png" style="max-width:100%;"></a></p>
+#### Points (incl. Bore Axis)
 ````
 Transforms a point layer or selection to profile coordinates with considering of elevation.
 If points has z values, they will used. 
@@ -59,8 +59,8 @@ To create vertical lines (bore axis) use Dept Start and Dept End from freature a
 Select a line feature or use an one feature layer as Baseline.
 If the baseline is a polylinestring, there could be blind spots.
 ````
-#### Reverse To Real World
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" style="max-width:100%;"></a></p>
+#### Reverse To Real World
 ````
 Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.
 Select a line feature or use an one feature layer as Baseline.
