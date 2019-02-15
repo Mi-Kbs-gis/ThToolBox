@@ -5,8 +5,8 @@
 ### 2D -> 3D
 
 #### Attach raster values to line vertices
-````
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" style="max-width:100%;"></a></p>
+````
 Process transform a LineString to LineStringZ geometry.
 Two modes available
 Mode "only vertices" sets Z-Values to given line vertices based on a (1 Band) raster data source.
