@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  TerrainModel
  TLUG Algorithms
                               -------------------
@@ -43,7 +43,7 @@ from qgis.core import QgsField
 from qgis.core import QgsRaster
 from qgis.core import * #QGis
 from qgis.PyQt.QtCore import QObject
-
+import math
 
 import datetime
 import struct
@@ -125,7 +125,7 @@ class TerrainModel(QObject):
                     featZ.setAttributes(feat.attributes())
                     featuresWithZ.append(featZ)
                 else:
-                    raise QgsProcessingException("No RasterValue for this position")
+                    raise QgsProcessingException("No RasterValue for this position: "+str(round(pinPoint.x(),1)) + " " + str(round(pinPoint.y(),1) ))
             #self.feedback.pushInfo("addZtoPointFeatures " + str(len(featuresWithZ))+ " Objekte")
         except Exception as err:
             msg = "Error: add Z to Point Features {0} \n {1}".format(err.args, repr(err))

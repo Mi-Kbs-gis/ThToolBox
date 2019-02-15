@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  RasterInterpolator
  TLUG Algorithms
                               -------------------

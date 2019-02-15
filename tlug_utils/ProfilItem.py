@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  ProfilItem
  TLUG Algorithms
                               -------------------
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2019-02-15'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 from qgis.PyQt.QtCore import QObject

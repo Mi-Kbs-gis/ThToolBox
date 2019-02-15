@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  LinearReferencingMaschine
  TLUBN Algorithms
                               -------------------
@@ -664,8 +664,10 @@ class LinearReferencingMaschine(QObject):
         elif t1>-0.000001 and t1<1.000001 and t2>-0.000001 and t2<1.000001: #
             #self.feedback.pushInfo("t2: "+str(t2)+" t1: " + str(t1) + " " + str(baseLine))
             pass
-        elif self.isSimpleLine==False:  # Wenn Punkt außerhalb des Linensegments liegt und die Achse mehrere Stützpunkte hat, abbrechen
-            
+        # elif self.isSimpleLine==True and t1>-0.000001 and t1<1.000001: #Schnittpunkt muss sich auf Linie befinden # Extrapolation mit simpler Baseline
+            # # Wenn Punkt außerhalb des Linensegments liegt und die Achse mehrere Stützpunkte hat, abbrechen
+            # pass
+        else:
             # no intersection
             
             return None, None
