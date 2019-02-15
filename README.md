@@ -6,6 +6,7 @@
 
 #### Attach raster values to line vertices
 ````
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" style="max-width:100%;"></a></p>
 Process transform a LineString to LineStringZ geometry.
 Two modes available
 Mode "only vertices" sets Z-Values to given line vertices based on a (1 Band) raster data source.
@@ -80,7 +81,12 @@ World files will be created.
 ### Links
 * [ThToolBox](https://plugins.qgis.org/plugins/ThToolBox/) - The PlugIn Website
 * [github](https://github.com/Mi-Kbs-gis/ThToolBox) -GitHub Website
-* [Documentation:de] (https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf)
+
+### Resources
+<ul>
+<li>Official QGIS plugins page: <a href="https://plugins.qgis.org/plugins/ThToolBox/" rel="nofollow">https://plugins.qgis.org/plugins/ThToolBox/</a></li>
+<li>Documentation (De) <a href="https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf" rel="nofollow">https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf</a></li>
+</ul>
 
 
 ### Authors
