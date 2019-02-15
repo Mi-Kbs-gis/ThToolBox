@@ -7,10 +7,10 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=TlugProcessing
+name=ThToolBox (formerly TlugProcessing)
 qgisMinimumVersion=3.0
-description=TLUBN Algorithms
-version=2.7.1
+description=TLUBN Algorithms 
+version=2.8
 author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
 email=Michael.Kuerbs@tlubn.thueringen.de
 
@@ -21,19 +21,23 @@ about=This is a processing tools collection of the Thüringer Landesamt für Umw
 	<b>Vector Seletion</b>
 	<b>Web</b>
 
-tracker=https://github.com/Mi-Kbs-gis/TlugProcessing/issues
-repository=https://github.com/Mi-Kbs-gis/TlugProcessing
-<a href="http://www.tlug-jena.de">TLUG</a>
+tracker=https://github.com/Mi-Kbs-gis/ThToolBox/issues
+repository=https://github.com/Mi-Kbs-gis/ThToolBox
+<a href="http://tlubn-thueringen.de">TLUBN</a>
 # End of mandatory metadata
 
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.7.1 Feb. 04, 2019
+changelog = 2.8 Feb. 15, 2019
+		- Plugin has renamed to ThToolBox
+		- Bugfix "Polygon - Baseline Intersections"
+		- Bugfix "Line - Baseline Intersections"
+    2.7.1 Feb. 04, 2019
 		- Organisation TLUG renamed to TLUBN
 		- algorithm "Reverse To Real World" supports MultiPolygon
 		- algorithm "Reverse To Real World" supports baselines with breakpoints
-		2.7 Dez. 21, 2018
+	2.7 Dez. 21, 2018
 		- new algorithm "Files To Table"
 		- algorithm "Baseline" renamed to "Raster Gradient"
 	2.6 Dez. 17, 2018
@@ -74,9 +78,9 @@ changelog = 2.7.1 Feb. 04, 2019
 # Tags are comma separated with spaces allowed
 tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table
 
-homepage=https://github.com/Mi-Kbs-gis/TlugProcessing
+homepage=https://github.com/Mi-Kbs-gis/ThToolBox
 category=Analysis
-icon=icons\TlugProcessing_Logo.png
+icon=icons\ThToolBox_Logo.png
 # experimental flag
 experimental=False
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  A QGIS plugin
  TLUBN Algorithms
                               -------------------
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-01-18'
+__date__ = '2019-02-15'
 __copyright__ = '(C) 2018 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -384,11 +384,12 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         stations=[]
         #get Intersection Points for each line seqment and add to list's
         for iSeq,lineP in enumerate(linesOfPolyLine):
-            points, stats=laengsProfil.linearRef.getIntersectionPointofPolyLine(lineP)
+            points, stats=laengsProfil.linearRef.getIntersectionPointsofPolyLine(lineP)
             if not points is None and not stats is None:
                 for i, point in enumerate(points):
                     intersectionPoints.append( point )
                     stations.append( stats[i] )
+                    #feedback.pushInfo(str(i) + ": "+ point.asWkt())
         #make features from the intersection points and take over the line attributes
         if not intersectionPoints is None:
             for i in range( len( intersectionPoints ) ):

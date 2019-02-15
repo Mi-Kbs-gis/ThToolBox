@@ -206,7 +206,7 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         
         #Clear Selection
         self.vectorLayer.removeSelection()
-        
+        counter=0
         for current, feature in enumerate(features):
             # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
@@ -217,8 +217,8 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
             #create profile feature for selected line 
             #if False:
             feedback.pushInfo( "Selection " + str( self.vectorLayer.selectedFeatureCount() ) + " Objects"  )
+            feedback.pushInfo("Counter: " + str(counter) )
             gradient_feature = self.runBaseLine(self.vectorLayer, context, feedback)
-
             newFeature = QgsFeature( fields )
             attrs=gradient_feature.attributes()
             attrs.append( self.ueberhoehung )
@@ -232,7 +232,7 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
 
             # Update the progress bar
             feedback.setProgress(int(current * total))
-
+            counter=counter+1
         # To run another Processing algorithm as part of this algorithm, you can use
         # processing.run(...). Make sure you pass the current context and feedback
         # to processing.run to ensure that all temporary layer outputs are available

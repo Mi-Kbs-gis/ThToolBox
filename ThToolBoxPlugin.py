@@ -2,7 +2,7 @@
 """
 /***************************************************************************
  ThToolBox
-                                 A QGIS plugin
+                                 ThToolBoxPlugin
  TLUG Algorithms
                               -------------------
         begin                : 2017-10-25
@@ -25,14 +25,31 @@ __author__ = 'Michael Kürbs'
 __date__ = '2018-07-31'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
+# This will get replaced with a git SHA1 when you do a git archive
 
-# noinspection PyPep8Naming
-def classFactory(iface):  # pylint: disable=invalid-name
-    """Load ThToolBoxPlugin class from file ThToolBoxPlugin.
+__revision__ = '$Format:%H$'
 
-    :param iface: A QGIS interface instance.
-    :type iface: QgsInterface
-    """
-    #
-    from .ThToolBoxPlugin import ThToolBoxPlugin
-    return ThToolBoxPlugin()
+import os
+import sys
+import inspect
+
+from qgis.core import QgsProcessingAlgorithm, QgsApplication
+from .ThToolBox_algorithms_provider import ThToolBoxPluginProvider
+
+cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+
+if cmd_folder not in sys.path:
+    sys.path.insert(0, cmd_folder)
+
+
+class ThToolBoxPlugin(object):
+
+    def __init__(self):
+        self.provider = ThToolBoxPluginProvider()
+
+    def initGui(self):
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
+    def unload(self):
+        QgsApplication.processingRegistry().removeProvider(self.provider)
+

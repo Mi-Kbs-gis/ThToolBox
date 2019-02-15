@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  TransformToProfil_PolygonIntersection
  TLUG Algorithms
                               -------------------
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-12-21'
+__date__ = '2019-02-15'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -423,7 +423,7 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                 countPoints=countPoints+len(schnittpunktFeaturesOfThisPolygon)
 
         except:
-            msg = self.tr("Error: Creating Intesections Geometry {0} Feature {1}").format(str(type(feat.geometry())), str(feat.attributes()))
+            msg = self.tr("Error: Creating Intersections Geometry {0} Feature {1}").format(str(type(feat.geometry())), str(feat.attributes()))
             feedback.reportError(msg)
             raise QgsProcessingException(msg)
         msgInfo=self.tr("Intersected Lines: {0} Intersections: {1}").format(ioFeat, countPoints)
@@ -528,7 +528,7 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         
         for lineP in linesOfPolygon:
             #get all Intersection Points
-            intersectionPoints, stations=laengsProfil.linearRef.getIntersectionPointofPolyLine(lineP)
+            intersectionPoints, stations=laengsProfil.linearRef.getIntersectionPointsofPolyLine(lineP)
             if not intersectionPoints is None:
                 for i in range(len(intersectionPoints)):
                     try:
@@ -570,7 +570,7 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         
         for lineP in linesOfPolygon:
             #get all Intersection Points
-            intersectionPoints, stations=laengsProfil.linearRef.getIntersectionPointofPolyLine(lineP)
+            intersectionPoints, stations=laengsProfil.linearRef.getIntersectionPointsofPolyLine(lineP)
             if not intersectionPoints is None:
                 for i in range(len(intersectionPoints)):
                     try:

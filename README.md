@@ -1,8 +1,8 @@
-# TlugProcessing at master
+# ThToolBox at master
 
 
 ## QGIS Processing Toolbox of TLUG
-### 3D Tools
+### 2D -> 3D
 
 #### Attach raster values to line vertices
 ````
@@ -24,7 +24,7 @@ Include some file properties.
 ```
 Geometrys would be transformed to a linear referencing by a baseline.
 ```
-#### Baseline
+#### Raster Gradient
 ````
 Transforms a single Line to profile coordinates with considering of elevation.
 On Raster NoDATA-Values, the profile elevation where set to 0.
@@ -59,7 +59,7 @@ Retransform point, line or polygon geometrys from profile coordinates back to re
 Select a line feature or use an one feature layer as Baseline.
 ````
 
-### Vector Selection Tools
+### Vector Selection
 #### Select duplicates
 ````
 Selects all duplicates in a field or based on a expression.
@@ -78,10 +78,11 @@ World files will be created.
 ````
 
 ### Links
-* [TlugProcessing](https://plugins.qgis.org/plugins/TlugProcessing/) -The PlugIn Website
-* [github](https://github.com/Mi-Kbs-gis/TlugProcessing) -GitHub Website
+* [ThToolBox](https://plugins.qgis.org/plugins/ThToolBox/) - The PlugIn Website
+* [github](https://github.com/Mi-Kbs-gis/ThToolBox) -GitHub Website
+* [Documentation:de] (https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf)
 
 
 ### Authors
 
-* **Michael Kürbs**  - [TLUG](https://www.thueringen.de/th8/tlug/)
+* **Michael Kürbs**  - [TLUBN](http://tlubn-thueringen.de)

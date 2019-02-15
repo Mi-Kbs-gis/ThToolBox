@@ -2,7 +2,7 @@
 
 """
 /***************************************************************************
- TlugProcessing
+ ThToolBox
                                  WMS Ripper
  TLUG Algorithms
                               -------------------
@@ -21,7 +21,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-12-21'
+__date__ = '2019-02-15'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
