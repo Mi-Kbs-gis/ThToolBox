@@ -34,10 +34,10 @@ On Raster NoDATA-Values, the profile elevation where set to 0.
 Select a line feature or use an one feature layer as Baseline.
 ````
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" style="max-width:100%;"></a></p>
-<h2>Line - Baseline Intersections</h2>
+<h3>Line - Baseline Intersections</h3>
 <ol>
-p>Get the intersections from a line layer with the baseline and transform them to profile coordinates.</p>
-p>Select a line feature or use an one feature layer as Baseline.</p>
+<p>Get the intersections from a line layer with the baseline and transform them to profile coordinates.</p>
+<p>Select a line feature or use an one feature layer as Baseline.</p>
 </ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" style="max-width:100%;"></a></p>
 #### Polygon - Baseline Intersections
