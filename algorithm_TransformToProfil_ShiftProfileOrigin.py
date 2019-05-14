@@ -141,7 +141,7 @@ class TransformToProfil_ShiftProfileOrigin(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("This function is shifting a profile geometry along x axis. The X - Offset is determinated by the distance between 2 related cross section baselines. The relationship between the two baselines is performed by a join based on the profile key.")
+        return self.tr("This function is shifting a profile geometry along x axis. The X - Offset is determinated by the distance between the start points of 2 related cross section baselines. The relationship between the two baselines is performed by a join based on the profile key.")
 
     def initAlgorithm(self, config=None):
         """
