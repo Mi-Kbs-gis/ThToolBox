@@ -109,14 +109,14 @@ class TransformToProfil_ShiftProfileOrigin(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'shift_profil_origin'
+        return 'shift_profile_origin'
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Shift Profile-Origin (X-Axis)')
+        return self.tr('Shift Profile Origin (X-Axis)')
 
     def group(self):
         """

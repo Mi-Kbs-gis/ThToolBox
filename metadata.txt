@@ -32,7 +32,7 @@ repository=https://github.com/Mi-Kbs-gis/ThToolBox
 
 # Uncomment the following line and add your changelog:
 changelog = 2.9 May. 14, 2019
-		- new algorithm "Translate Profil-Layers (X-Axis)"
+		- new algorithm "Shift Profile Origin (X-Axis)"
 		- Bugfix "Select duplicates"
 	2.8 Feb. 15, 2019
 		- Plugin has renamed to ThToolBox
