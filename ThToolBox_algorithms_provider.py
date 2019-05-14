@@ -36,6 +36,7 @@ from .algorithm_TransformToProfil_LineIntersection import TransformToProfil_Line
 from .algorithm_TransformToProfil_PolygonIntersection import TransformToProfil_PolygonIntersection
 from .algorithm_TransformToProfil_Points import TransformToProfil_Points
 from .algorithm_TransformGeomFromProfileToRealWorld import TransformGeomFromProfileToRealWorld
+from .algorithm_TransformToProfil_ShiftProfileOrigin import TransformToProfil_ShiftProfileOrigin
 from .algorithm_FileDownload import FileDownload
 from .algorithm_WMSRipper import WmsRipper
 from .algorithm_AttachRasterValuesToLineVertices import AttachRasterValuesToLineVertices
@@ -84,6 +85,7 @@ class ThToolBoxPluginProvider(QgsProcessingProvider):
         self.alglist.append( TransformToProfil_PolygonIntersection() )
         self.alglist.append( TransformToProfil_Points() )
         self.alglist.append( TransformGeomFromProfileToRealWorld() )
+        self.alglist.append( TransformToProfil_ShiftProfileOrigin() )
         self.alglist.append( Files2Table() )
 
     def unload(self):

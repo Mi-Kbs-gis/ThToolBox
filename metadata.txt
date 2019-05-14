@@ -7,10 +7,10 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=ThToolBox (formerly TlugProcessing)
+name=ThToolBox
 qgisMinimumVersion=3.0
-description=TLUBN Algorithms 
-version=2.8
+description=TLUBN Algorithms (formerly TlugProcessing)
+version=2.9
 author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
 email=Michael.Kuerbs@tlubn.thueringen.de
 
@@ -31,7 +31,10 @@ repository=https://github.com/Mi-Kbs-gis/ThToolBox
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.8 Feb. 15, 2019
+changelog = 2.9 May. 14, 2019
+		- new algorithm "Translate Profil-Layers (X-Axis)"
+		- Bugfix "Select duplicates"
+	2.8 Feb. 15, 2019
 		- Plugin has renamed to ThToolBox
 		- Bugfix "Polygon - Baseline Intersections"
 		- Bugfix "Line - Baseline Intersections"
@@ -78,7 +81,7 @@ changelog = 2.8 Feb. 15, 2019
 		- First version
 	
 # Tags are comma separated with spaces allowed
-tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table
+tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Rip, Capture, Profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table
 
 homepage=https://github.com/Mi-Kbs-gis/ThToolBox
 category=Analysis
