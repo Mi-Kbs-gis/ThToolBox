@@ -69,7 +69,7 @@
 <ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png" style="max-width:100%;"></a></p>
 <p>This function is shifting a profile geometry along x axis.</p>
-<p>The X - Offset is determinated by the distance between 2 related cross section baselines.</p>
+<p>The X - Offset is determinated by the distance between the start points of 2 related cross section baselines.</p>
 <p>The relationship between the two baselines is performed by a join based on the profile key.</p>
 </ol>
 </ol>
