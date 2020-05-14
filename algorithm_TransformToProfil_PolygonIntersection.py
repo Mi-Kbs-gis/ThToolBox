@@ -220,8 +220,8 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
 
 
 
-                if len(featuresWithZ)==0:
-                    feedback.reportError("No Features was added with z values.")
+                if len( featuresWithZ )==0:
+                    feedback.reportError( "No Features was added with z values." )
                     return {self.OUTPUT: 0}
                 else:
 
@@ -230,43 +230,48 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                         newFields=featuresWithZ[0].fields()
                         wkbTyp=featuresWithZ[0].geometry().wkbType()
                     except IndexError:
-                        msg = self.tr("No Z values could be assigned to the Geometries.")
-                        feedback.reportError(msg)
-                        raise QgsProcessingException(msg)
-
+                        msg = self.tr( "No Z values could be assigned to the Geometries." )
+                        feedback.reportError( msg )
+                        raise QgsProcessingException( msg )
+                        
+                    #newFields.append( QgsField( "profil_id" ,  QVariant.Int ) ) 
+                    newFields.append( QgsField( "z_factor" ,  QVariant.Int ) ) 
+                    
                     #config Output
-                    (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                    context, newFields, wkbTyp, crsProject)
+                    ( sink, dest_id ) = self.parameterAsSink( parameters, self.OUTPUT,
+                    context, newFields, wkbTyp, crsProject )
                 
 
                     #create geometries as profil coordinates
-                    profilFeatures=[]
+                    profilFeatures = []
                     iFeat=0
-                    for current, srcFeat in enumerate(featuresWithZ):
+                    for current, srcFeat in enumerate( featuresWithZ ):
                         # Stop the algorithm if cancel button has been clicked
                         if feedback.isCanceled():
-                            return {self.OUTPUT: dest_id}
+                            return { self.OUTPUT: dest_id }
                             #break
-                        srcGeom=srcFeat.geometry()
+                        srcGeom = srcFeat.geometry()
                         if srcGeom.isGeosValid():
-                            profilGeometries=lp.extractProfilGeom(srcGeom, ueberhoehung, lp.srcProfilLine)
+                            profilGeometries = lp.extractProfilGeom( srcGeom, ueberhoehung, lp.srcProfilLine )
                             #feedback.pushInfo("b " + str(srcFeat.attributes())+ ""+ str(profilGeometries))
                             for profilGeom in profilGeometries:
                                 # build a Feature
-                                profilFeat = QgsFeature(newFields)   
-                                profilFeat.setGeometry(profilGeom)
-                                profilFeat.setAttributes(srcFeat.attributes())
+                                profilFeat = QgsFeature( newFields )   
+                                profilFeat.setGeometry( profilGeom )
+                                attrs = srcFeat.attributes()
+                                attrs.append( ueberhoehung )                               
+                                profilFeat.setAttributes( attrs )
                                 # Add a feature in the sink
-                                sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
-                                iFeat=iFeat+1
-                                feedback.pushInfo(str(profilFeat.attributes()))
+                                sink.addFeature( profilFeat, QgsFeatureSink.FastInsert )
+                                iFeat = iFeat + 1
+                                #feedback.pushInfo(str(profilFeat.attributes()))
                         else:
                             feedback.reportError( str( srcFeat.attributes() ) + srcGeom.asWkt() )
                         # Update the progress bar
-                        feedback.setProgress(int(current * total))
+                        feedback.setProgress( int( current * total ) )
 
-                    msgInfo=self.tr("{0} intersection features where transformed to profile coordinates:").format(iFeat)
-                    feedback.pushInfo(msgInfo)
+                    msgInfo = self.tr( "{0} intersection features where transformed to profile coordinates:" ).format( iFeat )
+                    feedback.pushInfo( msgInfo )
                     # Return the results of the algorithm. In this case our only result is
                     return {self.OUTPUT: dest_id}
 

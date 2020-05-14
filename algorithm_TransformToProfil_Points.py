@@ -66,7 +66,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
     This Function is processing only the points inside a buffer around the Baseline or if there is a selection, all selected points.
     Extrapolation is not supported. Points have to be perpendicular to the baseline.
     Select one line feature or use an one feature layer as Baseline.
-	A baseline can have breakpoints.
+    A baseline can have breakpoints.
     If the baseline is a polylinestring, there could be blind spots. Points in blind spots will be ignored.
     """
 
@@ -75,7 +75,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     OUTPUT = 'OUTPUT'
-    INPUTBASELINE = 'INPUTVECTOR'
+    INPUTBASELINE = 'INPUTBASELINE'
     INPUTRASTER = 'INPUTRASTER'
     INPUTZFACTOR='INPUTZFACTOR'
     INPUTBUFFER='INPUTBUFFER'
@@ -186,6 +186,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         )
 
     def processAlgorithm(self, parameters, context, feedback):
+        feedback.pushInfo("PythonCommand: " + self.asPythonCommand( parameters, context ) )
         """
         Here is where the processing itself takes place.
         """
@@ -259,16 +260,17 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         fidxZ=-1
 
         if zFieldName:
+            modus=1
             #feedback.pushInfo("1 self.hasZGeometries(pointLayer):"+str(self.hasZGeometries(pointLayer, feedback)))
-            if self.hasZGeometries(pointLayer, feedback) == True:
-                reply = QMessageBox.question(self.iface.mainWindow(), 'Continue?', 
-                                 'Overide Z by field ' + zFieldName, QMessageBox.Yes, QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    modus=1
-                else:
-                    modus=3
-            else:
-                modus=1
+            # if self.hasZGeometries(pointLayer, feedback) == True:
+                # reply = QMessageBox.question(None, 'Continue?', 
+                                 # 'Overide Z by field ' + zFieldName, QMessageBox.Yes, QMessageBox.No)
+                # if reply == QMessageBox.Yes:
+                    # modus=1
+                # else:
+                    # modus=3
+            # else:
+                # modus=1
         else:
             #feedback.pushInfo("2 self.hasZGeometries(pointLayer):"+str(self.hasZGeometries(pointLayer, feedback)))
             if self.hasZGeometries(pointLayer, feedback) == True:
@@ -331,9 +333,16 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
 #        if wkbTyp == QgsWkbTypes.Point:
         sinkFields.append(QgsField("station", QVariant.Double))
         sinkFields.append(QgsField("abstand", QVariant.Double))
+        sinkFields.append(QgsField("z_factor", QVariant.Double))
+
         #config Output
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-        context, sinkFields, wkbTyp, crsProject)
+        feedback.pushInfo('parameters: ' + str(parameters))
+        feedback.pushInfo('self.OUTPUT: ' + str(self.OUTPUT))
+        feedback.pushInfo('context: ' + str(context))
+        feedback.pushInfo('sinkFields: ' + str(sinkFields.toList()))
+        feedback.pushInfo('wkbTyp: ' + str(wkbTyp))
+        feedback.pushInfo('crsProject: ' + str(crsProject.authid()))
+        (sink, dest_id) = self.parameterAsSink( parameters, self.OUTPUT, context, sinkFields, wkbTyp, crsProject )
 
         # #create geometries as profil coordinates
         #profilFeatures=[]
@@ -362,9 +371,10 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                     profilFeat.setGeometry(profilItem.profilGeom)
                     attrs=srcFeat.attributes()
                     #add station and abstand
-                    attrs.append(profilItem.station)
-                    attrs.append(profilItem.abstand)
-                    profilFeat.setAttributes(attrs)
+                    attrs.append( profilItem.station )
+                    attrs.append( profilItem.abstand )
+                    attrs.append( ueberhoehung )
+                    profilFeat.setAttributes( attrs )
                     # Add a feature in the sink
                     sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
                     iNewFeatures=iNewFeatures+1
@@ -385,7 +395,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return self.tr('Points_Bore_Axis')
+        return self.tr('points_bore_axis')
 
     def displayName(self):
         """
@@ -626,7 +636,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                     item=ProfilItem(geom, QgsGeometry().fromPolygon(points), firstStation, firstAbstand, zFactor)
                     profilItems.append(item)
         else:
-            feedback.pushnfo("def extractProfilGeom: Geometrietyp: "+str( geom.type())+str(geom.wkbType())+ geom.asWkt()+ " nicht zugeordnet")
+            feedback.pushInfo("def extractProfilGeom: Geometrietyp: "+str( geom.type())+str(geom.wkbType())+ geom.asWkt()+ " nicht zugeordnet")
        
         return profilItems, isOnBaseLine
 

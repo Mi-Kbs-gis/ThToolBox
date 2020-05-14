@@ -64,7 +64,7 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     OUTPUT = 'OUTPUT'
-    INPUTBASELINE = 'INPUTVECTOR'
+    INPUTBASELINE = 'INPUTBASELINE'
     INPUTRASTER = 'INPUTRASTER'
     INPUTZFACTOR='INPUTZFACTOR'
 
@@ -204,7 +204,7 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return self.tr( 'Raster_Gradient' )
+        return self.tr( 'raster_gradient' )
 
     def displayName(self):
         """

@@ -41,11 +41,14 @@ from .algorithm_FileDownload import FileDownload
 from .algorithm_WMSRipper import WmsRipper
 from .algorithm_AttachRasterValuesToLineVertices import AttachRasterValuesToLineVertices
 from .algorithm_Files2Table import Files2Table
-
+from .algorithm_TransformToProfil_PointsForAllLines import TransformToProfil_PointsForAllLines
+from .algorithm_TransformToProfil_GradientForAllLines import TransformToProfil_GradientForAllLines
+from .algorithm_TransformToProfil_PolygonIntersectionForAllLines import TransformToProfil_PolygonIntersectionForAllLines
+from .algorithm_TransformToProfil_LineIntersectionForAllLines import TransformToProfil_LineIntersectionForAllLines
 
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator, qVersion
-from PyQt5.QtGui import QIcon
 import os
+from PyQt5.QtGui import QIcon
 
 class ThToolBoxPluginProvider(QgsProcessingProvider):
 
@@ -81,10 +84,19 @@ class ThToolBoxPluginProvider(QgsProcessingProvider):
         
         # TO PROFILE COORDINATES
         self.alglist.append( TransformToProfil_Gradient() )
+        self.alglist.append( TransformToProfil_GradientForAllLines() )
+        
         self.alglist.append( TransformToProfil_LineIntersection() )
+        self.alglist.append( TransformToProfil_LineIntersectionForAllLines() )
+        
         self.alglist.append( TransformToProfil_PolygonIntersection() )
+        self.alglist.append( TransformToProfil_PolygonIntersectionForAllLines() )
+        
         self.alglist.append( TransformToProfil_Points() )
+        self.alglist.append( TransformToProfil_PointsForAllLines() )
+        
         self.alglist.append( TransformGeomFromProfileToRealWorld() )
+        
         self.alglist.append( TransformToProfil_ShiftProfileOrigin() )
         self.alglist.append( Files2Table() )
 

@@ -39,6 +39,8 @@ class LayerUtils(QObject):
     def multiPartToSinglePartFeature(self, feat):
         featureList=[]
         #explode Multipart features
+        #self.feedback.pushInfo( "multiPartToSinglePartFeature geom: " + str( feat.geometry().asWkt()) +" type: "+ str(feat.geometry().type()) +" wkbtype: "+ str(feat.geometry().wkbType()) + " isMultipart: " + str(feat.geometry().isMultipart()) )
+
         if feat.geometry().isMultipart():
             #ToDo Explode MultiPartGeometries
             subGeoms=self.multiPartToSinglePartGeom( feat.geometry() )
@@ -55,6 +57,8 @@ class LayerUtils(QObject):
     
     #returns a list of sub geometries
     def multiPartToSinglePartGeom(self, geom):
+        #self.feedback.pushInfo( "geom: " + str( geom.asWkt()) +" type: "+ str(geom.type()) +" wkbtype: "+ str(geom.wkbType()) )
+
         if geom.isMultipart():
             subGeoms = None #[QgsGeometry, QgsGeometry,..]
             if geom.type() == 2: #Polygon
@@ -88,7 +92,8 @@ class LayerUtils(QObject):
         return singleGeoms
 
     def multiLineToSingleLines(self, geom):
-        multiGeom = geom.asMultiPolygon()
+        multiGeom = geom.asMultiPolyline()
+        #self.feedback.pushInfo( "multiGeom: " + str( multiGeom) )
         singleGeoms=[]
         #Schleife zum Auflösen des Multiparts
         for line in multiGeom:

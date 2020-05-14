@@ -89,6 +89,8 @@ class WmsRipper(QgsProcessingAlgorithm):
 
     #globals
     path = ''
+    fieldNameBBOX='bbox'
+    fieldNameUrl='getmap_url'
     fieldNamePath='path'
     fieldNameFile='file'
     fieldNameResponseType='content'
@@ -229,12 +231,15 @@ class WmsRipper(QgsProcessingAlgorithm):
             raise ###
 
         fields = vectorLayer.fields()
+        fields.append( QgsField( self.fieldNameBBOX, QVariant.String ) )
+        fields.append( QgsField( self.fieldNameUrl, QVariant.String ) )
         fields.append( QgsField( self.fieldNamePath, QVariant.String ) )
         fields.append( QgsField( self.fieldNameFile, QVariant.String ) )
         fields.append( QgsField( self.fieldNameResponseType, QVariant.String ) )
         fields.append( QgsField( self.fieldNameHttpStatusCode, QVariant.Int) )
         #take CRS from Project
-        crsProject=QgsProject.instance().crs()         
+        crsProject=QgsProject.instance().crs()
+        feedback.pushInfo("CRS " + str(crsProject))
 
         
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
@@ -259,6 +264,14 @@ class WmsRipper(QgsProcessingAlgorithm):
          
         countDownload=0 
         for i, feature in enumerate(iter):
+        
+            # Stop the algorithm if cancel button has been clicked
+            if feedback.isCanceled():
+
+                msg = self.tr("Process was canceled!")
+
+                raise QgsProcessingException(msg)
+                
             hasError=False
             loopText=''
             attrs=feature.attributes()
@@ -286,84 +299,119 @@ class WmsRipper(QgsProcessingAlgorithm):
             if file_name is None or file_name == '':
                 file_name = "WMS_Tile_"+ str( i+1 )
                 feedback.pushInfo("Invalid Filename Expression on Feature: " + str(i) + " saved as " + file_name)
-            # if fileNameFileIndex > -1:
-                # file_name = str(feature[fileNameFileIndex])
-            # else:
-                # file_name = "WMS_Tile_"+ str( i+1 )
+
             contentType=None
             httpStatusCode=None
+            writeModus = 'wb' # binary
+            numTrials = 5 # 'Number of trial (Anzahl der Versuche)
             #Replace Special Characters
             file_name=file_name.replace(":","_")
             file_name=file_name.replace("*","_")
             file_name=file_name.replace("\\","_")
             file_name=file_name.replace("/","_")
 
-            
-            #loopText = str(i) +": "+ file_name +": "  + url
+
             if not str(url) == "":
             
                 try:
-            
-                    #result = requests.get(qUrl.url().replace('&amp;','&'), stream=False)
-                    #result = requests.get(url, stream=False)
-                    result = self.getResponse(url, 5, 0) # % Versuche
-                    
-                    if not result.headers is None and not result.status_code is None:
-                        httpStatusCode = result.status_code
-                        contentType = result.headers.get('Content-Type')
-                        feedback.pushInfo(str(i) +' '+ file_name + ' ('+str(contentType)+') ' + url)
-                    else:
-                        feedback.pushInfo(str(i) +' '+ file_name + ' ('+str(httpStatusCode)+') ' + url)
-                    if result.status_code == 200:
-                        filePath=self.path + "\\" + file_name + '.' + fileExt.lower()
-                        #image = result.raw.read()
-                        #open(filePath, 'wb').write(image)
-                        if result:
-                            with open(filePath, 'wb') as fd:
-                                for chunk in result.iter_content(chunk_size=128):
-                                    fd.write(chunk)
-                            fd.close()
-                        
-                        #create World File
-                        #first and last Character of image extension
-                        wldExt=''
-                        try:
-                            wldExt = fileExt[0] + fileExt[-1] + 'w'
-                        except:
-                            wldExt='wld'
-                        filePathWld=self.path + "\\" + file_name + '.' + wldExt.lower()
-                        outWld = open( filePathWld , 'w')
-                        outWld.write( str( pixelSize )  )
-                        outWld.write( '\n' + str(0) )
-                        outWld.write( '\n' + str(0) )
-                        outWld.write( '\n' + str( - pixelSize ) )
-                        outWld.write( '\n' + str( xMin + pixelSize) ) #Nimm Zentrum des linken oberen Pixels
-                        outWld.write( '\n' + str( yMax - pixelSize) )
-                        outWld.close()
-                        
-                    else:
-                        hasError=True
-                        feedback.pushInfo("Problem at Feature " + str(i) + ": " + unicode(url) + "  HTTP Status Code:" + str(result.status_code) )
-            
+           
+                    feedback.pushInfo( "----------------------------\n Start Download for feature " + str(i)+ " ("+ file_name +")" )
+                    feedback.pushInfo( "\nGetMap-URL: "+ unicode(url) + "\n"  ) #+ url" \n" + str(url.encode("utf-8"))+
 
-                    loopText = loopText + " Download finished"
+                    result = self.getResponse(feedback, url, numTrials, 0) # % Versuche
+                    if result is not None:
+                        feedback.pushInfo(".. trials executed. ")
+                        # To Do: es gibt result is not null und trotzdem wird keine Looptext-Augabe oder Datei erzeugt
+                        try:
+                            httpStatusCode = result.status_code
+
+                        
+                            if not result.headers is None and not result.status_code is None:
+                            
+                                contentType = result.headers.get('Content-Type')
+                                contentType = contentType.lower()
+
+                            else:
+                                feedback.pushInfo("No Header and Status_Code" + str(i) +' '+ file_name + ' ('+str(httpStatusCode)+') ' + url)
+                                fileExt='xml'
+                                writeModus = 'w'
+
+
+                        except Exception as resultErr:  #Result has No Header or status_code
+                            fileExt='xml'
+                            writeModus = 'w'
+                            loopText = loopText + "\n\t Download Result has No Header or status_code " + str(i) + "(" + file_name + "): " + " URL: " + unicode(url) + " " + str(resultErr.args) + ";" + str(repr(resultErr) + "\n  HTTP Status Code: " + str( httpStatusCode ) + '\n Content-Type: ' + str(contentType) )
+                            
+                  
+                        # change file type if not a image
+                        if contentType.find('image') == -1 and contentType.find('jpeg') == -1 and  contentType.find('jpg') == -1 and  contentType.find('png') == -1 and  contentType.find('gif') == -1 and contentType.find('tif') == -1:
+                            feedback.pushInfo("!!! Result is no valid WMS-image !!!!")
+                            writeModus = 'w'
+                            fileExt='xml'
+
+                        feedback.pushInfo("contentType: " + str(contentType))
+                        feedback.pushInfo('httpStatusCode: '+str( httpStatusCode ))
+                        feedback.pushInfo('Filetype: ' + str( fileExt ) )
+
+
+                        filePath=self.path + "\\" + file_name + '.' + fileExt.lower()
+
+                        with open(filePath, writeModus) as fd:
+                        
+                            #contentType='application/application/vnd.ogc.se_xml'
+                            if writeModus== 'wb': #binary
+                                fd.write( result.content ) 
+                            else: # string
+                                fd.write( result.text ) 
+                            
+
+                        fd.close()
+                        feedback.pushInfo('File saved: ' + str( filePath ) )
+                        
+                        if httpStatusCode == 200:
+                                                
+                           
+                            #create World File
+                            #first and last Character of image extension
+                            wldExt=''
+                            try:
+                                wldExt = fileExt[0] + fileExt[-1] + 'w'
+                            except:
+                                wldExt='wld'
+                            filePathWld=self.path + "\\" + file_name + '.' + wldExt.lower()
+                            outWld = open( filePathWld , 'w')
+                            outWld.write( str( pixelSize )  )
+                            outWld.write( '\n' + str(0) )
+                            outWld.write( '\n' + str(0) )
+                            outWld.write( '\n' + str( - pixelSize ) )
+                            outWld.write( '\n' + str( xMin + pixelSize) ) #Nimm Zentrum des linken oberen Pixels
+                            outWld.write( '\n' + str( yMax - pixelSize) )
+                            outWld.close()
+                            feedback.pushInfo('WorldFile saved: ' + str( filePathWld ) )
+
+                        else:
+                            hasError=True
+                            feedback.pushInfo("Problem at Feature " + str(i) + "(" + file_name + "): " + unicode(url) + "  HTTP Status Code:" + str(httpStatusCode) )
+                    
+
+                    else:
+                        # Result is empty
+                        feedback.pushInfo(".. trials without Result: " + str(result))
+
+                        loopText = loopText + " Result is empty for (" + file_name + "): " + unicode(url) + "\n WMS-Server delivers no data to create a file. " + str(numTrials) + ' trials were excecuted.'
+
+                    
                 except Exception as err:
                     hasError=True
-                    loopText = loopText + "\n\t Download error: On Feature " + str(i) + " URL: " + unicode(url) + " " + str(err.args) + ";" + str(repr(err))
-                
+                    loopText = loopText + "\n\t Download error: On Feature " + str(i) + "(" + file_name + "): " + " URL: " + unicode(url) + " " + str(err.args) + ";" + str(repr(err) + "\n  HTTP Status Code: " + str( httpStatusCode ) + '\n Content-Type: ' + str(contentType) )
 
-            if hasError == True or str(url) == "NULL" or str(url) == "":
-                #add a emty String if no Url
-                attrs.append( None )
-                attrs.append( None )
-                attrs.append( None )
-                attrs.append( None )
-            else:
-                #add String attributes to link the file
-                attrs.append( self.path + "\\")
-                attrs.append( file_name + '.' + fileExt.lower() )
-                attrs.append( contentType )
-                attrs.append( httpStatusCode )
+
+            attrs.append( bbox )
+            attrs.append( url )
+            attrs.append( self.path + "\\")
+            attrs.append( file_name + '.' + fileExt.lower() )
+            attrs.append( contentType )
+            attrs.append( httpStatusCode )
            
 
             try:
@@ -386,7 +434,7 @@ class WmsRipper(QgsProcessingAlgorithm):
                 loopText = loopText + "\n\t" +  qGisErr.summary()
             except Exception as err:
                 hasError=True
-                loopText = loopText + "\n\t Error while taking over the feature " + str(i) +" "+ str(err.args) + ";" + str(repr(err))
+                loopText = loopText + "\n\t Error while taking over the feature " + str(i) + "(" + file_name + "): " +" "+ str(err.args) + ";" + str(repr(err))
                 pass
 
             feedback.setProgress( int( i * total ) )
@@ -402,13 +450,14 @@ class WmsRipper(QgsProcessingAlgorithm):
         # Return the results of the algorithm. In this case our only result is
         return {self.OUTPUT: dest_id}
 
-    def getResponse(self, url, maxIteration, curIterartion=0):
-        result = requests.get(url, stream=False)
-
+    def getResponse(self, feedback, url, maxIteration, curIterartion=0):
+        feedback.pushInfo( str(curIterartion+1)+'. ')
+        result = requests.get(url)#, stream=False)
+        feedback.pushInfo( str( result )) # + " " + result.status_code)
         if not result.status_code == 200 and curIterartion < maxIteration:
-            self.getResponse(url, maxIteration, curIterartion)
-        else:
-            return result
+            result = self.getResponse(feedback, url, maxIteration, curIterartion + 1)
+        
+        return result
 
     def name(self):
         """

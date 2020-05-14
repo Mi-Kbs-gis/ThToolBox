@@ -4,7 +4,7 @@
 /***************************************************************************
  ThToolBox
                                  Find duplicates
- TLUG Algorithms
+ TLUBN Algorithms
                               -------------------
         begin                : 2017-10-25
         copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-02-15'
+__date__ = '2019-04-04'
 __copyright__ = '(C) 2017 Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -91,6 +91,7 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
         index=0
         protokoll=[]
         #Iterating over Vector Layer
+        feedback.pushInfo( "Processing ")
         iter = vectorLayer.getFeatures()
         for current, feature in enumerate(iter):
             try:
@@ -98,26 +99,31 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
                 context.setFeature(feature)
                 
                 value=expr.evaluate(context)
-            except:
-                msg="Error while run Expression" + str( expr.expression() ) + " on feature " + str( feature.attributes() ) 
+            except Exception as err:
+                msg = "Error while run Expression" + str( expr.expression() ) + " on feature " + str( feature.attributes() ) + ": " + str( err.args ) + ";" + str( repr( err ) ) 
                 feedback.reportError(msg)
                 raise QgsProcessingException(msg)
                 
             try:
                 #is the attribut in the list yet
-                index=attributes.index(value)
+                index=attributes.index( value )
+                feedback.pushInfo( "Index " + str(value) + ": " + str(index) )
+
                 #index=attributes.index(feature[fidx])
 
-            except ValueError: # value is not in the list
+            except ValueError as err: # value is not in the list
                 index = -1
-            except KeyError: # value is not in the list
+                #feedback.reportError( str(repr(err)) ) # "ValueError: "+str( value ) + ": " + str(err.args) + ";" + 
+            except KeyError as err: # value is not in the list
                 index = -1
+                #feedback.reportError(  "KeyError: "+str(value) + ": " + str(err.args) + ";" + str(repr(err)) )
             
             if index == -1: # add new attribute in the list
                 attributes.append(value)
           
             else: # it is a duplicate
                 duplicates.append(feature.id())
+
 
             # Update the progress bar
             proz=int( (current+1) * total)

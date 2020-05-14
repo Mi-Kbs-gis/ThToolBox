@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
 #from ggis.processing import alg
 #@alg(name= profileEachLine, label="Baselinefor all Lines of Layer",groop="To Profile Coordinates"
 
-# -*- coding: utf-8 -*-
+
+__author__ = 'Michael Kürbs'
+__date__ = '2019-06-03'
+__copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 """
 ***************************************************************************
@@ -24,15 +28,19 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterVectorLayer,
                        QgsProcessingParameterRasterLayer,
                        QgsProcessingParameterNumber,
+                       QgsProcessingParameterEnum,
+                       QgsProcessingParameterExpression,
                        QgsProcessingParameterFeatureSink,
                        QgsFeatureRequest,
                        QgsField,
-                       QgsFeature)
+                       QgsFeature,
+                       QgsExpression,
+                       QgsExpressionContext)
 import processing
 import os
 
 
-class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
+class TransformToProfil_PolygonIntersectionForAllLines(QgsProcessingAlgorithm):
     """
     This is an example algorithm that takes a vector layer and
     creates a new identical one.
@@ -50,14 +58,13 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    INPUTBASELINE = 'INPUTBASELINE'
-    vectorLayer=None
-    INPUTRASTER = 'INPUTRASTER'
-    rasterLayer = None
-    INPUTZFACTOR = 'INPUTZFACTOR'
-    ueberhoehung = 0
     OUTPUT = 'OUTPUT'
-    
+    INPUTBASELINE = 'INPUTVECTOR'
+    INPUTRASTER = 'INPUTRASTER'
+    INPUTZFACTOR='INPUTZFACTOR'
+    INPUTINTERSECTIONLAYER='INPUTINTERSECTIONLAYER'
+    OUTPUTGEOMTYPE = 'OUTPUTGEOMTYPE'
+    SOURCE_BASLINE_ID = 'SOURCE_BASLINE_ID'
 
     def initAlgorithm(self, config=None):
         """
@@ -69,8 +76,15 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         # geometry.
         self.addParameter(
             QgsProcessingParameterVectorLayer(
+                self.INPUTINTERSECTIONLAYER,
+                self.tr('Intersection Polygon Layer'),
+                [QgsProcessing.TypeVectorPolygon]
+            )
+        )        
+        self.addParameter(
+            QgsProcessingParameterVectorLayer(
                 self.INPUTBASELINE,
-                self.tr('Profil Baselines'),
+                self.tr('Profil Baseline'),
                 [QgsProcessing.TypeVectorLine]
             )
         )
@@ -94,6 +108,20 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
                 
             )
         )
+        self.addParameter(
+            QgsProcessingParameterExpression(
+                self.SOURCE_BASLINE_ID,
+                self.tr('Field with baseline primary key (must be unique!)'),
+                parentLayerParameterName=self.INPUTBASELINE
+            )
+        )
+        geomTypes = [self.tr('Lines'),
+                      self.tr('Points')]        
+        self.addParameter(QgsProcessingParameterEnum(
+            self.OUTPUTGEOMTYPE,
+            self.tr('Output Geometry Type'),
+            options=geomTypes, defaultValue=0))
+
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
@@ -101,7 +129,7 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.OUTPUT,
-                self.tr('Raster_Gradients')
+                self.tr('Profil_Polygon Intersections')
             )
         )
 
@@ -109,20 +137,33 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         """
         Here is where the processing itself takes place.
         """
-        self.ueberhoehung = self.parameterAsInt(parameters, self.INPUTZFACTOR, context)
-        self.rasterLayer = self.parameterAsRasterLayer(parameters, self.INPUTRASTER, context)
-        self.vectorLayer= self.parameterAsVectorLayer(parameters, self.INPUTBASELINE, context)
+        ueberhoehung = self.parameterAsInt(parameters, self.INPUTZFACTOR, context)
+        rasterLayer = self.parameterAsRasterLayer(parameters, self.INPUTRASTER, context)
+        baseLineLayer = self.parameterAsVectorLayer(parameters, self.INPUTBASELINE, context)
+        polygonLayer =  self.parameterAsVectorLayer(parameters, self.INPUTINTERSECTIONLAYER, context)
+        outputGeomType = self.parameterAsEnum(parameters, self.OUTPUTGEOMTYPE, context)
+        exprBaselineID = self.parameterAsExpression(parameters, self.SOURCE_BASLINE_ID, context)
+        
+        mywkbType=None
+        if outputGeomType == 1: #'Points':
+            mywkbType = 1
+            
+        else: #0 Lines
+        
+            mywkbType = 2
+        
         # Retrieve the feature source and sink. The 'dest_id' variable is used
         # to uniquely identify the feature sink, and must be included in the
         # dictionary returned by the processAlgorithm function.
-        fields=self.vectorLayer.fields()
-        fields.append( QgsField( "z_factor" ,  QVariant.Int) ) 
+        fields=polygonLayer.fields()
+        fields.append( QgsField( "z_factor" ,  QVariant.Int) ) # will be added and filled by Subprocess (algorithm_TransformToProfil_PolygonIntersection.py)
+        fields.append( QgsField( "profil_id" ,  QVariant.Int) ) 
 
         # If source was not found, throw an exception to indicate that the algorithm
         # encountered a fatal error. The exception text can be any string, but in this
         # case we use the pre-built invalidSourceError method to return a standard
         # helper text for when a source cannot be evaluated
-        if self.vectorLayer is None:
+        if polygonLayer is None:
             raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT))
 
         (sink, dest_id) = self.parameterAsSink(
@@ -130,12 +171,13 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
             self.OUTPUT,
             context,
             fields,
-            self.vectorLayer.wkbType(),
-            self.vectorLayer.sourceCrs()
+            mywkbType,
+            polygonLayer.sourceCrs()
         )
+        #try:
 
         # Send some information to the user
-        #feedback.pushInfo('CRS is {}'.format(vectorLayer.sourceCrs().authid()))
+        #feedback.pushInfo('CRS is {}'.format(polygonLayer.sourceCrs().authid()))
 
         # If sink was not created, throw an exception to indicate that the algorithm
         # encountered a fatal error. The exception text can be any string, but in this
@@ -145,45 +187,76 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
             raise QgsProcessingException(self.invalidSinkError(parameters, self.OUTPUT))
 
         features=[] #QgsFeatureIterator
-        if len( self.vectorLayer.selectedFeatures() ) > 0:
-            features = self.vectorLayer.selectedFeatures()
+        if len( baseLineLayer.selectedFeatures() ) > 0:
+            features = baseLineLayer.selectedFeatures()
         else:
-            features = [feat for feat in self.vectorLayer.getFeatures()]
+            features = [feat for feat in baseLineLayer.getFeatures()]
         feedback.pushInfo( 'Features {} used'.format( len( features ) ) )
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
         total = 100.0 / len( features ) if len( features ) else 0
-        
+        #names = [field.name()+"; " for field in fields]
+        #feedback.pushInfo(''.join( names ) )
         #Clear Selection
-        self.vectorLayer.removeSelection()
+        baseLineLayer.removeSelection()
         counter=0
         for current, feature in enumerate(features):
             # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
                 break
             
+            expr = QgsExpression( exprBaselineID )
+            exprContext = QgsExpressionContext()
+            exprContext.setFeature(feature)
+            
+            profilID = expr.evaluate ( exprContext ) #, baseLineLayer.fields() )
+            feedback.pushInfo(str(exprBaselineID) + ": Profil-ID: " + str(profilID) )
             #select to current feature
-            self.vectorLayer.select( feature.id() )
+            baseLineLayer.select( feature.id() )
             #create profile feature for selected line 
             #if False:
-            feedback.pushInfo( "Selection " + str( self.vectorLayer.selectedFeatureCount() ) + " Objects"  )
+            #feedback.pushInfo( "Selection " + str( polygonLayer.selectedFeatureCount() ) + " Objects"  )
             feedback.pushInfo("Counter: " + str(counter) )
-            gradient_feature = self.runBaseLine(self.vectorLayer, context, feedback)
-            newFeature = QgsFeature( fields )
-            attrs=gradient_feature.attributes()
-            attrs.append( self.ueberhoehung )
-            newFeature.setAttributes( attrs )
-            newFeature.setGeometry( gradient_feature.geometry() )
-            
+            gradient_features = None
+            try:
+                gradient_features = self.runPolygonIntersection( polygonLayer, baseLineLayer, rasterLayer, ueberhoehung, outputGeomType, context, feedback)
+                count=0
+                for grFeature in gradient_features:
+                    #feedback.pushInfo("Type: " + str(type(grFeature)) )
+                    if not str(type(grFeature)) == "<class 'qgis._core.QgsFeature'>":
+                        feedback.pushInfo("Abbruch Type: " + str(type(grFeature)) )
+                        break
+
+                    newFeature = QgsFeature( fields )
+                    attrs = grFeature.attributes()
+                    #attrs.append( ueberhoehung ) # Wird bereits in runPolygonIntersection zugefügt
+                    attrs.append( profilID )
+                
+                    newFeature.setAttributes( attrs )
+                    newFeature.setGeometry( grFeature.geometry() )
+                    # Add a feature in the sink
+                    sink.addFeature( newFeature, QgsFeatureSink.FastInsert)
+                    count=count+1
+                print( "Count: " + str(count) + ' at profile ' + str( profilID ) )
+                feedback.pushInfo("Count: " + str(count) + ' at profile ' + str( profilID ) )
+            except Exception as err:
+                print("ERROR at profile " + str( profilID ) + ': '+ str(err.args) + " " + str(repr( err )) + " Fehler: "  )
+                feedback.pushInfo("ERROR at profile " + str( profilID ) + ': '+ str(err.args) + " " + str(repr( err )) + " Fehler: "  )
+
+
             #Clear Selection
-            self.vectorLayer.removeSelection()
-            # Add a feature in the sink
-            sink.addFeature(newFeature, QgsFeatureSink.FastInsert)
+            baseLineLayer.removeSelection()
 
             # Update the progress bar
             feedback.setProgress(int(current * total))
             counter=counter+1
+        #except Exception as err:
+        #    feedback.pushInfo("ERROR: "+ str(err.args) + " " + str(repr( err )) + " Fehler: "  )
+        #
+        #    print("ERROR:", err.args, repr( err ), "Fehler: " )
+        
+        
         # To run another Processing algorithm as part of this algorithm, you can use
         # processing.run(...). Make sure you pass the current context and feedback
         # to processing.run to ensure that all temporary layer outputs are available
@@ -202,25 +275,19 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         # or output names.
         return {self.OUTPUT: dest_id}
     
-    def runBaseLine(self, baselineLayer, context, feedback):
+    def runPolygonIntersection(self, polygonLayer, baseLineLayer, rasterLayer, ueberhoehung, outputGeomType,  context, feedback):
     
-        profil_gradient_layer = processing.run("thtoolbox:raster_gradient", { 
-                            'INPUTRASTER' : self.rasterLayer.source(), #'//tlugjfs2/laserscandaten/dgm1_grid/dgm1'
-                            'INPUTBASELINE' : self.vectorLayer.source(), #'M:/transfer/Kürbs/TH-Profile/th_profile.shp|layername=th_profile'
-                            'INPUTZFACTOR' : self.ueberhoehung,
-                            'OUTPUT' : 'memory:' 
+        profil_gradient_layer = processing.run("thtoolbox:Polygon_Baseline_Intersections", { 
+                            'INPUTINTERSECTIONLAYER' : polygonLayer.source(),
+                            'INPUTRASTER' : rasterLayer.source(), #'//tlugjfs2/laserscandaten/dgm1_grid/dgm1'
+                            'INPUTVECTOR' : baseLineLayer.source(), #'M:/transfer/Kürbs/TH-Profile/th_profile.shp|layername=th_profile'
+                            'INPUTZFACTOR' : ueberhoehung,
+                            'OUTPUT' : 'memory:',
+                            'OUTPUTGEOMTYPE' : outputGeomType #2-->Lines
                             }, context=context, feedback=feedback)['OUTPUT']
-        gradient_feature = next(profil_gradient_layer.getFeatures(QgsFeatureRequest().setLimit(1)))
+        #gradient_feature = next(profil_gradient_layer.getFeatures(QgsFeatureRequest().setLimit(1)))
         
-        return gradient_feature
-
-        
-    def tr(self, string):
-        """
-        Returns a translatable string with the self.tr() function.
-        """
-        return QCoreApplication.translate('Processing', string)
-
+        return profil_gradient_layer.getFeatures()
 
     def name(self):
         """
@@ -230,22 +297,31 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'raster_gradient_multi_baseline'
+        return 'polygon_baseline_intersection_all_lines'
 
-    
+
+
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr( 'Raster Gradient (Multi Baseline)' )
+        return self.tr( 'Polygon - Baseline Intersections (Multi Baseline)' )
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it..
+        """
+        return self.tr("This algorithm performs the function 'Polygon - Baseline Intersection' for all lines of a line layer.")
 
     def group(self):
         """
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr(self.groupId())
+        return self.tr('To Profile Coordinates')
 
     def groupId(self):
         """
@@ -256,21 +332,12 @@ class TransformToProfil_GradientForAllLines(QgsProcessingAlgorithm):
         formatting characters.
         """
         return 'To Profile Coordinates'
-
-    def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and the
-        parameters and outputs associated with it..
-        """
-        return self.tr("This algorithm performs the function 'Raster_Gradient' for all lines of a line layer.")
-
-   
+        
     def icon(self):
-        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformToProfil_Gradient_Logo.png'))
+        return QIcon(os.path.join(os.path.dirname(__file__),'icons/TransformToProfil_LineIntersection_Logo.png'))
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)
-
+    
     def createInstance(self):
-        return TransformToProfil_GradientForAllLines()
+        return TransformToProfil_PolygonIntersectionForAllLines()
