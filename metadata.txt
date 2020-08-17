@@ -14,8 +14,8 @@ about=This is a processing tools collection of the Thüringer Landesamt für Umw
 	<p>To Profile Coordinates</p>
 	<p>Vector Seletion</p>
 	<p>Web</p>
-	<p><a href='https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf'>Documentation(DE)</a></p>
-	<p><a href="http://tlubn-thueringen.de">TLUBN</a></p>
+	<p><a href='https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf'>Documentation(DE)</a></p>
+	<p><a href="https://tlubn.thueringen.de/">TLUBN</a></p>
 
 tracker=https://github.com/Mi-Kbs-gis/ThToolBox/issues
 repository=https://github.com/Mi-Kbs-gis/ThToolBox
