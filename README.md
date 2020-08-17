@@ -103,10 +103,10 @@
 ### Resources
 <ul>
 <li>Official QGIS plugins page: <a href="https://plugins.qgis.org/plugins/ThToolBox/" rel="nofollow">https://plugins.qgis.org/plugins/ThToolBox/</a></li>
-<li>Documentation (De) <a href="https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf" rel="nofollow">https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf</a></li>
+<li>Documentation (De) <a href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf" rel="nofollow">https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf</a></li>
 </ul>
 
 
 ### Authors
 
-* **Michael Kürbs**  - [TLUBN](http://tlubn-thueringen.de)
+* **Michael Kürbs**  - [TLUBN](https://tlubn.thueringen.de/)
