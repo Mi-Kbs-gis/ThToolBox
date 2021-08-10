@@ -261,7 +261,8 @@ class WmsRipper(QgsProcessingAlgorithm):
                 msg = self.tr("no Features to process")
                 feedback.reportError(msg)
                 raise QgsProcessingException(msg)
-         
+        feedback.pushInfo("Pixel size: " + str(pixelSize))
+
         countDownload=0 
         for i, feature in enumerate(iter):
         
@@ -277,14 +278,15 @@ class WmsRipper(QgsProcessingAlgorithm):
             attrs=feature.attributes()
             geom = feature.geometry()
             bbox = geom.boundingBox()
-            xMin = round( bbox.xMinimum(), 1)
-            xMax = round( bbox.xMaximum(), 1 )
-            yMin = round( bbox.yMinimum(), 1)
-            yMax = round( bbox.yMaximum(), 1 )
+            xMin = round( bbox.xMinimum(), 2)
+            xMax = round( bbox.xMaximum(), 2)
+            yMin = round( bbox.yMinimum(), 2)
+            yMax = round( bbox.yMaximum(), 2)
             
             bboxText ='{0},{1},{2},{3}'.format( xMin, yMin, xMax, yMax )
             pixelsX = int( (xMax - xMin) / pixelSize )
             pixelsY = int( (yMax - yMin) / pixelSize )
+            feedback.pushInfo("BBox: " + str(i) + bboxText + " --> Tile width: " + str(pixelsX) + " height: " + str(pixelsY) )
             
             epsg=vectorLayer.crs().authid()
             url = unicode( baseUrl + 'request=GetMap&Service=WMS&Version=' + wmsVersion + '&SRS=' + str(epsg) + '&LAYERS=' + layers + '&STYLES=' + style_name + '&BBOX=' + bboxText + '&FORMAT=image/' + self.imageFormats[imageFormatIdx].lower() +'&WIDTH=' + str(pixelsX)+ '&HEIGHT=' + str(pixelsY) )
@@ -304,11 +306,15 @@ class WmsRipper(QgsProcessingAlgorithm):
             httpStatusCode=None
             writeModus = 'wb' # binary
             numTrials = 5 # 'Number of trial (Anzahl der Versuche)
-            #Replace Special Characters
-            file_name=file_name.replace(":","_")
-            file_name=file_name.replace("*","_")
-            file_name=file_name.replace("\\","_")
-            file_name=file_name.replace("/","_")
+            if type(file_name) == int or type(file_name) == float:
+                # if filename is numeric
+                file_name = str(file_name)
+            else:
+                #Replace Special Characters
+                file_name=file_name.replace(":","_")
+                file_name=file_name.replace("*","_")
+                file_name=file_name.replace("\\","_")
+                file_name=file_name.replace("/","_")
 
 
             if not str(url) == "":
@@ -345,9 +351,12 @@ class WmsRipper(QgsProcessingAlgorithm):
                   
                         # change file type if not a image
                         if contentType.find('image') == -1 and contentType.find('jpeg') == -1 and  contentType.find('jpg') == -1 and  contentType.find('png') == -1 and  contentType.find('gif') == -1 and contentType.find('tif') == -1:
+                            isImage = False
                             feedback.pushInfo("!!! Result is no valid WMS-image !!!!")
                             writeModus = 'w'
                             fileExt='xml'
+                        else:
+                            isImage=True
 
                         feedback.pushInfo("contentType: " + str(contentType))
                         feedback.pushInfo('httpStatusCode: '+str( httpStatusCode ))
@@ -368,7 +377,7 @@ class WmsRipper(QgsProcessingAlgorithm):
                         fd.close()
                         feedback.pushInfo('File saved: ' + str( filePath ) )
                         
-                        if httpStatusCode == 200:
+                        if httpStatusCode == 200 and isImage==True:
                                                 
                            
                             #create World File
@@ -384,8 +393,8 @@ class WmsRipper(QgsProcessingAlgorithm):
                             outWld.write( '\n' + str(0) )
                             outWld.write( '\n' + str(0) )
                             outWld.write( '\n' + str( - pixelSize ) )
-                            outWld.write( '\n' + str( xMin + pixelSize) ) #Nimm Zentrum des linken oberen Pixels
-                            outWld.write( '\n' + str( yMax - pixelSize) )
+                            outWld.write( '\n' + str( xMin + pixelSize/2 ) ) #Nimm Zentrum des linken oberen Pixels 
+                            outWld.write( '\n' + str( yMax - pixelSize/2) )
                             outWld.close()
                             feedback.pushInfo('WorldFile saved: ' + str( filePathWld ) )
 
@@ -406,7 +415,7 @@ class WmsRipper(QgsProcessingAlgorithm):
                     loopText = loopText + "\n\t Download error: On Feature " + str(i) + "(" + file_name + "): " + " URL: " + unicode(url) + " " + str(err.args) + ";" + str(repr(err) + "\n  HTTP Status Code: " + str( httpStatusCode ) + '\n Content-Type: ' + str(contentType) )
 
 
-            attrs.append( bbox )
+            attrs.append( bboxText )
             attrs.append( url )
             attrs.append( self.path + "\\")
             attrs.append( file_name + '.' + fileExt.lower() )
@@ -452,6 +461,8 @@ class WmsRipper(QgsProcessingAlgorithm):
 
     def getResponse(self, feedback, url, maxIteration, curIterartion=0):
         feedback.pushInfo( str(curIterartion+1)+'. ')
+        #proxies = { "http": "http://IP:PORT" }  #"http://user:password@IP:PORT"
+        #result = requests.get(url, proxies=proxies)
         result = requests.get(url)#, stream=False)
         feedback.pushInfo( str( result )) # + " " + result.status_code)
         if not result.status_code == 200 and curIterartion < maxIteration:
