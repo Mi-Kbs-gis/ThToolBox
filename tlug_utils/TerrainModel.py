@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2018-08-08'
+__date__ = '2022-04-20'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 
@@ -111,25 +111,36 @@ class TerrainModel(QObject):
                 rastVal=None
                 if fieldIdWithZVals > -1:
                     rastVal=feat[fieldIdWithZVals]
+                    if rastVal is None or str(rastVal) =='NULL':
+                        felder = feat.fields()
+                        feld = felder.field(fieldIdWithZVals)
+                        self.feedback.reportError('Error on Feature ' + str(feat.id()))
+                        self.feedback.reportError('Feature Attributes :' + str(feat.attributes()))
+                        raise QgsProcessingException('Z value on field   '  + feld.name() + ' is empty!')
                 else: #hole Z-Wert von DGM
                     rastVal = self.interpolator.linear(pin2Crs)            #QgsPointXY(4459566.0, 5613959.0))
                 #self.feedback.pushInfo("addZtoPointFeatures2 " + geom.asWkt() + " 2Crs: " + geom2CRS.asWkt())
                 #self.feedback.pushInfo("rastVal " + str(pinPoint)+ " = in RasterCrs:"+ str(pin2Crs)+ " = "+ str(rastVal))
                 #rastSample = rasterLayer.dataProvider().identify(pin2Crs, QgsRaster.IdentifyFormatValue).results()
-                if not rastVal is None:
+                if not rastVal is None or str(rastVal) !='NULL': # ToDo der Leerwert muss noch beruecksichtigt werden
+                    wkt="PointZ(" + str( pinPoint.x() ) + " " + str(pinPoint.y()) + " " + str(rastVal) + ")"
+                    #self.feedback.reportError(wkt)
+                    
                     #construct new Feature in source Crs
-                    ptZ=QgsPoint(pinPoint.x(), pinPoint.y(), rastVal)
-                    wkt="PointZ(" + str(pinPoint.x()) + " " + str(pinPoint.y()) + " " + str(rastVal) + ")"
-                    geomZ=QgsGeometry.fromWkt(wkt)
-                    featZ.setGeometry(geomZ)
-                    featZ.setAttributes(feat.attributes())
-                    featuresWithZ.append(featZ)
+                    ptZ=QgsPoint( pinPoint.x(), pinPoint.y() )
+                    ptZ.addZValue( rastVal )
+                    geomZ=QgsGeometry.fromWkt( wkt )
+                    featZ.setGeometry( geomZ )
+                    featZ.setAttributes( feat.attributes() )
+                    featuresWithZ.append( featZ )
                 else:
-                    raise QgsProcessingException("No RasterValue for this position: "+str(round(pinPoint.x(),1)) + " " + str(round(pinPoint.y(),1) ))
+                    self.feedback.reportError('Point Feature: ' + feat.id() + '  ' + wkt + ' ' + feat.attributes() )
+                    raise QgsProcessingException("No valid RasterValue for this position: " + str(round(pinPoint.x(),1)) + " " + str(round(pinPoint.y(),1) ) + ' raster value: ' + str(rastVal))
             #self.feedback.pushInfo("addZtoPointFeatures " + str(len(featuresWithZ))+ " Objekte")
         except Exception as err:
             msg = "Error: add Z to Point Features {0} \n {1}".format(err.args, repr(err))
             self.feedback.reportError(msg)
+            featuresWithZ=[]
             raise QgsProcessingException(msg)
             #print("Error addZtoPointFeatures")#,str(err.args) + ";" + str(repr(err)))
             #raise QgsProcessingException("Error addZtoPointFeatures " + str(err.args))# + ";" + str(repr(err)))
