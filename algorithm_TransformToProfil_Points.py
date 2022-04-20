@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-02-15'
+__date__ = '2022-04-20'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -162,7 +162,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.INPUTZFIELDEND,
-                self.tr('Depth Field (End)'),
+                self.tr('Depth (End)'),
                 None,
                 self.INPUTPOINTLAYER,
                 QgsProcessingParameterField.Numeric,
@@ -467,12 +467,20 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                 tiefeBis=srcFeat.attribute(tiefeBisIdx)         
             
             #tiefeBis=srcFeat.attribute(tiefeBisIdx)
-            if tiefeBis is None or str(tiefeBis)=="":
+            if tiefeBis is None or str(tiefeBis)=="" or str(tiefeBis)=="NULL":
+                feld = srcFeat.fields().field(tiefeBisIdx)
+                feedback.reportError("Depth End: "+str(tiefeBis))
+                feedback.reportError("Feature: "+str(srcFeat.id()))
+                feedback.reportError("Attributes: "+str(srcFeat.attributes()))
                 tiefeBis=0
-                feedback.pushInfo("tiefeBis:"+str(tiefeBis))
-            if tiefeVon is None or str(tiefeVon)=="":
+                raise QgsProcessingException('Depth End value on field    ' + feld.name() + '       is empty!')
+            if tiefeVon is None or str(tiefeVon)=="" or str(tiefeVon)=="NULL":
+                feld = srcFeat.fields().field(tiefeVonIdx)
+                feedback.reportError("Depth Start: " + str(tiefeVon))
+                feedback.reportError("Feature: "+str(srcFeat.id()))
+                feedback.reportError("Attributes: "+str(srcFeat.attributes()))
                 tiefeVon=0
-                feedback.pushInfo("tiefeVon:" + str(tiefeVon))
+                raise QgsProcessingException('Depth Start value on field   '+ feld.name() + '      is empty!')
             
             feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
             inputGeom = srcFeat.geometry().vertexAt(0)
