@@ -57,7 +57,10 @@ class TerrainModel(QObject):
         self.feedback=feedback
         self.rasterLayer=rasterLayer
         self.dataProv = rasterLayer.dataProvider()
-
+        self.exportNodata=-9999  
+        self.srcNodata=None
+        if self.dataProv.sourceHasNoDataValue==True:
+            self.srcNodata=self.dataProv.sourceNoDataValue
         self.myExtent = self.dataProv.extent()
         self.theWidth = self.rasterLayer.width()
         self.theHeight = self.rasterLayer.height()
@@ -67,10 +70,16 @@ class TerrainModel(QObject):
         self.rasterWidth=(self.pixelSizeX + self.pixelSizeY) / 2 
         
         dataset = gdal.Open(self.rasterLayer.source(), GA_ReadOnly)
-        geotransform = dataset.GetGeoTransform()
+        try:
+            geotransform = dataset.GetGeoTransform()
+        except Exception as err:
+            msg='Digital elevation raster layer <' +  self.rasterLayer.name()+ '> is not valid! Georeference not found! '+ str(err.args) 
+            #feedback.reportError( msg )
+            raise QgsProcessingException( msg )
         bandNo=1
         band = dataset.GetRasterBand(bandNo)
         self.nodata=band.GetNoDataValue()
+        feedback.pushInfo("TerrainModel.NoData:" + str(self.nodata))
         bandtype = gdal.GetDataTypeName(band.DataType)
         interpolMethod=1 #0=nearestNeighbor, 1=linear 2x2 Pixel, 2=bicubic 4x4 Pixel
         self.interpolator=RasterInterpolator(rasterLayer, interpolMethod, bandNo, dataset, self.feedback)
@@ -122,20 +131,29 @@ class TerrainModel(QObject):
                 #self.feedback.pushInfo("addZtoPointFeatures2 " + geom.asWkt() + " 2Crs: " + geom2CRS.asWkt())
                 #self.feedback.pushInfo("rastVal " + str(pinPoint)+ " = in RasterCrs:"+ str(pin2Crs)+ " = "+ str(rastVal))
                 #rastSample = rasterLayer.dataProvider().identify(pin2Crs, QgsRaster.IdentifyFormatValue).results()
-                if not rastVal is None or str(rastVal) !='NULL': # ToDo der Leerwert muss noch beruecksichtigt werden
+                if not rastVal is None and str(rastVal) !='NULL' and self.srcNodata!=rastVal and self.exportNodata!=rastVal: # ToDo der Leerwert muss noch beruecksichtigt werden
                     wkt="PointZ(" + str( pinPoint.x() ) + " " + str(pinPoint.y()) + " " + str(rastVal) + ")"
                     #self.feedback.reportError(wkt)
                     
                     #construct new Feature in source Crs
-                    ptZ=QgsPoint( pinPoint.x(), pinPoint.y() )
-                    ptZ.addZValue( rastVal )
+                    #ptZ=QgsPoint( pinPoint.x(), pinPoint.y() )
+                    #ptZ.addZValue( rastVal )
                     geomZ=QgsGeometry.fromWkt( wkt )
                     featZ.setGeometry( geomZ )
                     featZ.setAttributes( feat.attributes() )
                     featuresWithZ.append( featZ )
                 else:
-                    self.feedback.reportError('Point Feature: ' + feat.id() + '  ' + wkt + ' ' + feat.attributes() )
-                    raise QgsProcessingException("No valid RasterValue for this position: " + str(round(pinPoint.x(),1)) + " " + str(round(pinPoint.y(),1) ) + ' raster value: ' + str(rastVal))
+                    #construct new Feature in source Crs with Raster value -9999
+                    wkt="PointZ(" + str( pinPoint.x() ) + " " + str(pinPoint.y()) + " " + str(self.exportNodata) + ")"
+
+                    geomZ=QgsGeometry.fromWkt( wkt )
+                    featZ.setGeometry( geomZ )
+                    featZ.setAttributes( feat.attributes() )
+                    featuresWithZ.append( featZ )
+                    
+                    #self.feedback.reportError('Point Feature: ' + feat.id() + '  ' + wkt + ' ' + feat.attributes() )
+                    #raise QgsProcessingException("No valid RasterValue for this position: " + str(round(pinPoint.x(),1)) + " " + str(round(pinPoint.y(),1) ) + ' raster value: ' + str(rastVal))
+                    
             #self.feedback.pushInfo("addZtoPointFeatures " + str(len(featuresWithZ))+ " Objekte")
         except Exception as err:
             msg = "Error: add Z to Point Features {0} \n {1}".format(err.args, repr(err))

@@ -70,9 +70,6 @@ class LinearReferencingMaschine(QObject):
             #print(pt.x(), pt.y())
         return points   
         
-    def getStationAbstandForPoint(self, point): #QgsPoint
-        pass
-
     def createSpatialIndex(self, vectorLayer):
         for feat in vectorLayer.getFeatures():
             index=QgsSpatialIndex()
@@ -181,15 +178,16 @@ class LinearReferencingMaschine(QObject):
 
     #berechnet die Station und den Abstand eines Punktes zu einem Liniensegment
     def calcStationAbstandFromSegment(self, line, position):
-        linePoints=line.asPolyline()
-        p1=QgsGeometry.fromPoint(linePoints[0])
-        p2=QgsGeometry.fromPoint(linePoints[1])
+        linePoints=line.asPolyline() # List of QgsPointXY
+        
+        p1=linePoints[0] #QgsPointXY
+        p2=linePoints[1]
         #Richtungswinkel
-        tSegment=richtungswinkelRAD(p1, p2)
-        tToPosition=richtungswinkelRAD(p1, position)
+        tSegment=self.richtungswinkelRAD(p1, p2)
+        tToPosition=self.richtungswinkelRAD(p1, position)
         winkelP1Pos=tToPosition-tToPosition # Falls Winkeldifferenz winkelP1Pos negativ, liegt der Punkt links der Achse
         #polare Entferung von P1 zu Position
-        polareStrecke=punktEntfernung2D(p1.asPoint(),position.asPoint())
+        polareStrecke=self.punktEntfernung2D( p1, position)
         #Berechnung über Polarer Anhänger
         h=polareStrecke*math.sin(winkelP1Pos)
         q=polareStrecke*math.cos(winkelP1Pos)
@@ -199,8 +197,33 @@ class LinearReferencingMaschine(QObject):
             return q,h #station, abstand
 
 
+    # # Erstellt eine lineare Referenzierung(QgsGeometry, QgsGeometry)
+    # def getSegmentsOnPoint(self, point):
+        # stationBase=0
+        # minAbstand=99999
+        # curStation=0
+        # station=None
+        # bestLine=None
+        # for line  in self.lineSegments:
+            # stationSegment, abstand=self.transformToSegmentCoords(point, line)
+            # if not stationSegment is None and not abstand is None:
+                # curStation=stationBase + stationSegment
+                # #Es wird das Segment gesucht, welches den kuerzeten Abstand zum Punkt hat
+                # if stationBase==0:
+                    # minAbstand=abstand
+                    # station=curStation
+                    # bestLine=line
+                # elif math.fabs(abstand) < math.fabs(minAbstand): #compare just absolute values
+                    # minAbstand = abstand
+                    # station=curStation
+                    # bestLine=line
+            # stationBase = stationBase + line.length()
+        # return bestLine
+
+
     # Erstellt eine lineare Referenzierung(QgsGeometry, QgsGeometry)
     def transformToLineCoords(self, position):
+        print('transformToLineCoords')
         stationBase=0
         minAbstand=99999
         curStation=0
@@ -223,11 +246,10 @@ class LinearReferencingMaschine(QObject):
     def transformToSegmentCoords(self, position, line):
         #teste Geometrytype
         #if position.wkbType()== and line.wkbType()==:
-        
+        print('transformToSegmentCoords')
         station=None
         abstand=None
         linePoints=line.asPolyline() #ist ein Feld mit allen Punkten
-        
         #Welche sind die beiden nächstgelegenen Punkte?
         min1=99999 #kürzeste Distanz
         min2=99999 #zweit-kürzeste Distanz
@@ -254,8 +276,7 @@ class LinearReferencingMaschine(QObject):
         #Orthogonaler Vektor
         vecOrtho=[-vec12[1],vec12[0]] #x und y werden umgedreht und das Vorzeichen des x-Wertes vertauscht->Rechtssystem
         #das Vorzeichen von t2 zeigt auf welcher Seite der Punkt liegt (+/Rechts , -/links)
-        #print("vec12",vec12)
-        #print("vecOrtho",vecOrtho)
+
         #Gerade 1 - linear equation 1
         #x  x1    vec12[0]
         # =   + t1*
@@ -268,17 +289,111 @@ class LinearReferencingMaschine(QObject):
 
         #Aufstellung der Geradengleichung
         #Contruct the linear equation
-        #print("x0",x1)
-        #print("x1",vec12[0])
-        #print("x2",x3)
-        #print("x3",vec12[1])
+
         
         #fx=[x1, vec12[0], x3, vecOrtho[0]]      # *y[3]
         #fy=[y1, vec12[1], y3, vecOrtho[1]] # *(x[3])
         x=[x1, vec12[0], x3, vecOrtho[0]]      # *y[3]
         y=[y1, vec12[1], y3, vecOrtho[1]] # *(x[3])
-        #print("x=",x)
-        #print("y=",y)
+
+        
+        t1=self.getScaleGerade1AusGeradenGleichung(x,y)
+        #print("t1=",t1)
+        fx2=[x3, vecOrtho[0], x1, vec12[0]]      # *y[3]
+        fy2=[y3, vecOrtho[1], y1, vec12[1]]
+
+        t2=self.getScaleGerade1AusGeradenGleichung(fx2,fy2)
+        #das Vorzeichen von t2 zeigt auf welcher Seite der Punkt liegt (+/Rechts , -/links)
+
+        #t2=self.getScaleGerade2AusGeradenGleichung(x,y)
+        #print("t2=",t2)
+        
+        #Prüfung, ob Punkt zu Linienseqment gehört
+        #Wenn t1 zwischen 0 und 1 liegt, dann befindet sich der Lotpunkt auf dem Linienstück zwischen P1 und P2
+        #If the value of t1 is between 0 and 1, the intersection ist between the points 1 and 2
+        if t1>-0.000001 and t1<1.000001: #
+            pass
+        elif self.isSimpleLine==False: # Wenn Punkt außerhalb des Linensegments liegt und die Achse mehrere Stützpunkte hat, abbrechen
+            #print("Punkt liegt nicht lotrecht auf Basislinie")
+            return None, None
+        
+        
+        #print("t1=",float(a1[1]), "/" , a1[0], "=",t1)
+        #print("t1",t1)
+        
+        
+        #Schnittpunkt
+        # t1 wird in Geradengleichung eingesetzt
+        xs=x1+t1*vec12[0]
+        ys=y1+t1*vec12[1]    
+        #Schnittpunkt2
+        #xs2=x3+t2*vecOrtho[0]
+        #ys2=y3+t2*vecOrtho[1]
+        
+        #Betrag des orthogonalen vektors / Absolute of orthogonal vector
+        absVecOrtho=math.sqrt(vecOrtho[0]*vecOrtho[0]+vecOrtho[1]*vecOrtho[1])
+        #das Vorzeichen von t2 zeigt auf welcher Seite der Punkt liegt (+/Rechts , -/links)
+        ordinate= t2 * absVecOrtho
+
+        #Station auf Gerade
+        #station on straight
+        dx=xs-x1
+        dy=ys-y1
+        station=math.sqrt(dx*dx+dy*dy) #pythagroas
+            
+        
+        return station, ordinate
+        
+
+    # Berechnet den Lotpunkt eines Punkte auf einer Linie(QgsGeometry, QgsGeometry)    
+    # calc perpendicular point from a point and a line segment
+    def getLotPunkt(self, position, line):
+
+        linePoints=line.asPolyline() #ist ein Feld mit allen Punkten
+        
+        #Welche sind die beiden nächstgelegenen Punkte?
+        min1=99999 #kürzeste Distanz
+        min2=99999 #zweit-kürzeste Distanz
+        dist=None
+
+       
+        #3. Ansatz Analytische Geometrie --Schnittpunktzweier Geraden
+        #print(linePoints)
+        x1=linePoints[0].x()
+        y1=linePoints[0].y()
+        x2=linePoints[1].x()
+        y2=linePoints[1].y()
+        #print(x1,y1,x2,y2)
+        #Punkt, der linear referenziert werden soll
+        x3=position.x()
+        y3=position.y()
+        
+        #Vector zwischen p1 und p2
+        vec12=[x2-x1,y2-y1] 
+        
+        #Orthogonaler Vektor
+        vecOrtho=[-vec12[1],vec12[0]] #x und y werden umgedreht und das Vorzeichen des x-Wertes vertauscht->Rechtssystem
+        #das Vorzeichen von t2 zeigt auf welcher Seite der Punkt liegt (+/Rechts , -/links)
+
+        #Gerade 1 - linear equation 1
+        #x  x1    vec12[0]
+        # =   + t1*
+        #y  y1    vec12[1]
+        
+        #Gerade 2 - linear equation 2
+        #x  x3    vec12[1]
+        # =   + t2*
+        #y  y3    vec12[0]+(-1)
+
+        #Aufstellung der Geradengleichung
+        #Contruct the linear equation
+
+        
+        #fx=[x1, vec12[0], x3, vecOrtho[0]]      # *y[3]
+        #fy=[y1, vec12[1], y3, vecOrtho[1]] # *(x[3])
+        x=[x1, vec12[0], x3, vecOrtho[0]]      # *y[3]
+        y=[y1, vec12[1], y3, vecOrtho[1]] # *(x[3])
+
         
         t1=self.getScaleGerade1AusGeradenGleichung(x,y)
         #print("t1=",t1)
@@ -309,27 +424,16 @@ class LinearReferencingMaschine(QObject):
         # t1 wird in Geradengleichung eingesetzt
         xs=x1+t1*vec12[0]
         ys=y1+t1*vec12[1]
-        #print "ys=",y2,"+",t1,"*",vec12[1]
-        #print("Schnittpunkt", xs,ys)
-        
+
+        #Schnittpunkt2
         #xs2=x3+t2*vecOrtho[0]
         #ys2=y3+t2*vecOrtho[1]
-        #print("Schnittpunkt2", xs2,ys2)
-        #Betrag des orthogonalen vektors / Absolute of orthogonal vector
-        absVecOrtho=math.sqrt(vecOrtho[0]*vecOrtho[0]+vecOrtho[1]*vecOrtho[1])
-        #das Vorzeichen von t2 zeigt auf welcher Seite der Punkt liegt (+/Rechts , -/links)
-        ordinate= t2 * absVecOrtho
 
-        #Station auf Gerade
-        #station on straight
-        dx=xs-x1
-        dy=ys-y1
-        station=math.sqrt(dx*dx+dy*dy)
-            
-        return  station, ordinate
+        return  QgsPoint(xs, ys)
+
         #Betrag des Vektors zwischen dem Lotpunkt und P3 entspricht dem Abstand von der Achse(Ordinate)
         #t2=self.getScaleGerade2AusGeradenGleichung(x,y)
-        
+                
         #Function is part of 
     def getRichtungsWinkelRADDiff(self, p1,p2,p3):
         #Richtungswinkel von P1 nach P2
