@@ -80,7 +80,7 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
         if expr.hasParserError():
             raise QgsProcessingException(expr.parserErrorString())
 
-        context = QgsExpressionContext()
+        exprContext = QgsExpressionContext()
 
         count = vectorLayer.featureCount() if vectorLayer.featureCount() else 0
         total = 100.0 / count
@@ -96,9 +96,9 @@ class SelectDuplicates(QgisAlgorithm):#QgsProcessingAlgorithm):
         for current, feature in enumerate(iter):
             try:
                 #create value from Expression
-                context.setFeature(feature)
+                exprContext.setFeature(feature)
                 
-                value=expr.evaluate(context)
+                value=expr.evaluate(exprContext)
             except Exception as err:
                 msg = "Error while run Expression" + str( expr.expression() ) + " on feature " + str( feature.attributes() ) + ": " + str( err.args ) + ";" + str( repr( err ) ) 
                 feedback.reportError(msg)

@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-02-15'
+__date__ = '2023-04-06'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -37,7 +37,8 @@ from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterBoolean,
-                       QgsProcessingParameterFolderDestination,
+                       #QgsProcessingParameterFolderDestination,
+                       QgsProcessingParameterFile,
                        #QgsProcessingParameterVectorLayer,
                        #QgsProcessingParameterFeatureSource,
                        #QgsProcessingParameterRasterLayer,
@@ -48,8 +49,6 @@ from qgis.core import (QgsProcessing,
                        QgsField,
                        QgsFields,
                        QgsProcessingException)
-from .tlug_utils.TerrainModel import TerrainModel
-from .tlug_utils.LaengsProfil import LaengsProfil
 from PyQt5.QtGui import QIcon
 
 class Files2Table(QgsProcessingAlgorithm):
@@ -65,10 +64,9 @@ class Files2Table(QgsProcessingAlgorithm):
     OUTPUT = 'OUTPUT'
     INPUTDIR = 'INPUTDIR'
     USE_SUBDIR = 'USE_SUBDIR'
-    #INPUTRASTER = 'INPUTRASTER'
-    #MODUS = 'MODUS'
+
     
-    def initAlgorithm(self, config):
+    def initAlgorithm(self, config='default'):
         """
         Here we define the inputs and output of the algorithm, along
         with some other properties.
@@ -76,12 +74,15 @@ class Files2Table(QgsProcessingAlgorithm):
 
         # We add the input vector features source. It can have any kind of
         # geometry.
+
         self.addParameter(
-            QgsProcessingParameterFolderDestination(
+            QgsProcessingParameterFile(
                 self.INPUTDIR,
-                self.tr('Files Directory')
+                self.tr('Files Directory'),
+                behavior=QgsProcessingParameterFile.Folder
             )
         )
+        
         self.addParameter(
             QgsProcessingParameterBoolean(
                 self.USE_SUBDIR,
@@ -110,11 +111,11 @@ class Files2Table(QgsProcessingAlgorithm):
         fields = QgsFields()
         fields.append( QgsField( "filename", QVariant.String ) )     #0
         fields.append( QgsField( "path", QVariant.String ) )         #1
-        fields.append( QgsField( "absPath", QVariant.String ) )     #2
+        fields.append( QgsField( "abspath", QVariant.String ) )     #2
         fields.append( QgsField( "filetype", QVariant.String ) )     #2
         fields.append( QgsField( "createdate", QVariant.DateTime ) ) #3
         fields.append( QgsField( "modifydate", QVariant.DateTime ) ) #4
-        fields.append( QgsField( "size", QVariant.Int) )             #5
+        fields.append( QgsField( "size", QVariant.LongLong) )             #5
 
         #take CRS from Rasterlayer 
         crsProject=QgsProject.instance().crs()         
@@ -123,37 +124,46 @@ class Files2Table(QgsProcessingAlgorithm):
                 context, fields, 100, crsProject) #100=WKBUnknown
         countFiles=0
 
-        try:
+#        try:
 
-            self.fileList = [] #list of QFileInfo
-            self.readDir(dir, useSubDirs, 1, feedback)       
-            for iFeat, fInfo in enumerate(self.fileList):
-                attrs=[]
-                if not fInfo==None:
-                    # Attributes
-                    absFilePath=(os.path.join( fInfo.absolutePath(), fInfo.fileName()))
-                    attrs.append( fInfo.fileName() )                        #0
-                    attrs.append( fInfo.absoluteDir().absolutePath() )      #1
-                    attrs.append( fInfo.absoluteFilePath() )                    #2
-                    attrs.append( fInfo.suffix() )                  #3
-                    attrs.append( fInfo.birthTime()  )                      #4
-                    attrs.append( fInfo.lastModified() )                    #5
-                    attrs.append( fInfo.size() )                            #6
-                    #Create new Feature
-                    newFeat = QgsFeature(fields)
-
-                    newFeat.setAttributes(attrs)
-                    # Add a feature in the sink
-                    sink.addFeature(newFeat, QgsFeatureSink.FastInsert)
-                    countFiles=countFiles+1
+        self.fileList = [] #list of QFileInfo
+        self.readDir(dir, useSubDirs, 1, feedback)       
+        for iFeat, fInfo in enumerate(self.fileList):
+            attrs=[]
+            #feedback.pushInfo(fInfo.absoluteFilePath() + " " +  str(fInfo==None))
+            if not fInfo==None:
+                # Attributes
+                absFilePath=(os.path.join( fInfo.absolutePath(), fInfo.fileName()))
+                attrs.append( fInfo.fileName() )                        #0
+                attrs.append( fInfo.absoluteDir().absolutePath() )      #1
+                attrs.append( fInfo.absoluteFilePath() )                    #2
+                if fInfo.isDir():
+                    attrs.append( 'folder' )                  #3
                 else:
-                    feedback.pushInfo('Error: Feature ' + str( iFeat + 1 ) + finfo.absolutePath() )
-                
-        
-        except:
-            msg = self.tr("Error while writing table features")
-            feedback.reportError(msg)
-            raise QgsProcessingException(msg)
+                    attrs.append( fInfo.suffix() )                  #3
+                attrs.append( fInfo.birthTime()  )                      #4
+                attrs.append( fInfo.lastModified() )                    #5
+                if fInfo.isDir():
+                    listOfFiles= os.listdir( fInfo.absoluteFilePath() )
+                    attrs.append(len(listOfFiles))                         #6
+                #Create new Feature
+                else:
+                    attrs.append( fInfo.size() )                            #6
+                #Create new Feature
+                newFeat = QgsFeature(fields)
+
+                newFeat.setAttributes(attrs)
+                # Add a feature in the sink
+                sink.addFeature(newFeat, QgsFeatureSink.FastInsert)
+                countFiles=countFiles+1
+            else:
+                feedback.pushInfo('Error: Feature ' + str( iFeat + 1 ) + finfo.absolutePath() )
+            
+    
+#        except Exception as err:
+#            msg = self.tr("Error while writing table features" + ": " + str( err.args ) + ";" + str( repr( err )))
+#            feedback.reportError(msg)
+#            raise QgsProcessingException(msg)
 
         msgInfo=self.tr(str(countFiles) + " Files were added to table.")
         feedback.pushInfo(msgInfo)
@@ -166,35 +176,42 @@ class Files2Table(QgsProcessingAlgorithm):
         #Schleife für alle Einträge des Verzeichnises
         listOfFiles= os.listdir( dir )
         total=100
-        if len(listOfFiles) > 0:
-            total = 100.0 / len(listOfFiles)
-
+        if tiefe==1 and len(listOfFiles) > 0: #ZeroDivisionError
+            total = 100.0 / len(listOfFiles) 
         
-        
-            #for n,file in enumerate( os.listdir( dir ) ):
-            for n, file in enumerate(listOfFiles):
+            
+            
+        #feedback.pushInfo(str(len(listOfFiles)) + ' Items in dir ' +  dir)
+    
+    
+        #for n,file in enumerate( os.listdir( dir ) ):
+        for n, file in enumerate(listOfFiles):
 
-                filePath=(os.path.join(dir, file))
-                info=QFileInfo(filePath)
-                #print( dir, info.isFile(), info.isDir( ))
-                if info.exists() and info.isFile():
-                    self.fileList.append( info ) 
-                    #print (info.fileName(), info.size(), info.birthTime(), info.lastModified())
-                elif info.exists() and info.isDir() and readSubs == True:
-                    # rekursive if Sub Dir
+            filePath=(os.path.join(dir, file))
+            info=QFileInfo(filePath)
+            #feedback.pushInfo(str(info.isFile()) + ' ' +  str(info.isDir()) + ' ' + info.absoluteFilePath())
+            #print( dir, info.isFile(), info.isDir( ))
+            if info.exists() and info.isFile():
+                self.fileList.append( info ) 
+                #print (info.fileName(), info.size(), info.birthTime(), info.lastModified())
+            elif info.exists() and info.isDir():
+                # rekursive if Sub Dir
+                if readSubs == True: # read Sub directory if needed
+                    self.fileList.append( info ) # add separate item for the directory
                     self.readDir(filePath, True, tiefe + 1, feedback)
-                else:
-                    pass
-                    #next
-                if tiefe == 1:
-                    # Update the progress bar in level 1
-                    feedback.setProgress( int( n + 1 * total ) )
+            else:
+                pass
+                #next
+            if tiefe == 1:
+                # Update the progress bar in level 1
+                feedback.setProgress( int( n + 1 * total ) )
                 
-        else:
-            feedback.setProgress( int( 100 ) )
-            feedback.pushInfo("No files in directory! " + dir)
+#        else:
+#            if tiefe = 1:
+#                feedback.setProgress( int( 100 ) )
+#            feedback.pushInfo("No files in directory! " + dir)
 
-            return #fileList
+        return #fileList
         
     def name(self):
         """

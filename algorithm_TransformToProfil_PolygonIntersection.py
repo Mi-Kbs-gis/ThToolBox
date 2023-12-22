@@ -72,7 +72,10 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
     INPUTZFACTOR='INPUTZFACTOR'
     INPUTINTERSECTIONLAYER='INPUTINTERSECTIONLAYER'
     OUTPUTGEOMTYPE = 'OUTPUTGEOMTYPE'
-
+    USE_ZERODATA='USE_ZERODATA'
+    USE_NEGATIVEDATA='USE_NEGATIVEDATA'
+    USE_NODATA='USE_NODATA'
+    
     def initAlgorithm(self, config):
         """
         Here we define the inputs and output of the algorithm, along
@@ -142,7 +145,14 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
         baseLineLayer = self.parameterAsVectorLayer(parameters, self.INPUTBASELINE, context)
         polygonLayer =  self.parameterAsVectorLayer(parameters, self.INPUTINTERSECTIONLAYER, context)
         outputGeomType = self.parameterAsEnum(parameters, self.OUTPUTGEOMTYPE, context)
+        use_zerodata = self.parameterAsBoolean(parameters, self.USE_ZERODATA, context)
+        use_nodata = self.parameterAsBoolean(parameters, self.USE_NODATA, context)
+        use_negativeData = self.parameterAsBoolean(parameters, self.USE_NEGATIVEDATA, context)
 
+        feedback.pushInfo("use_nodata:" + str(use_nodata))
+        feedback.pushInfo("use_negativeData:" + str(use_negativeData))
+        feedback.pushInfo("use_zerodata:" + str(use_zerodata))
+         
         baseLine=None
         #Basline Layer must have only 1 Feature
         if baseLineLayer.featureCount()==1:
@@ -211,7 +221,12 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                         featZ = QgsFeature(schnittLineFeat)
                         linRef = LinearReferencingMaschine(schnittLineFeat.geometry(), crsProject, feedback)
                         line3D = self.calc3DProfile(linRef, tm, crsProject)
-                        featZ.setGeometry(line3D)
+                        ###########################################
+                        
+                        
+                        
+                        ###########################################
+                        #featZ.setGeometry(line3D)
                         featZ.setAttributes(schnittLineFeat.attributes())
                         featuresWithZ.append(featZ)
 

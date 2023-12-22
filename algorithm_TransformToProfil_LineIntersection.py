@@ -183,6 +183,12 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
         if self.isLineType(lineLayer):
             #get intersection point features
             schnittpunkte=self.getSchnittpunkteAusLinien(featuresOnLine, lineLayer.crs(), lp, feedback) #Um Attribute der geschnittenen Objekte zu uebernehmen, muss hier mehr uebergeben werden
+            
+            if len(schnittpunkte)<1:
+                msg="Baseline has no intersections with current line features!"
+                feedback.reportError(msg)
+                return {self.OUTPUT: dest_id}
+                
             #calculate Z-Values
             featuresWithZ=tm.addZtoPointFeatures(schnittpunkte, crsProject, layerZFieldId)
             #config Output
@@ -191,7 +197,7 @@ class TransformToProfil_LineIntersection(QgsProcessingAlgorithm):
             except:
                 msg="Can not transfer Z-Values to Line Intersections, may be  the raster data source is not covering this whole range!"
                 feedback.reportError(msg)
-                raise QgsProcessingException(msg)
+                #raise QgsProcessingException(msg)
             wkbTyp=featuresWithZ[0].geometry().wkbType()
             (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
             context, newFields, wkbTyp, crsProject)

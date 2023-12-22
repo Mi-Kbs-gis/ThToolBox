@@ -214,11 +214,15 @@ class FileDownload(QgsProcessingAlgorithm):
                         else:
                             file_name = "File_" + str(i+1)+'.'+ fileExt
 
-                        #Replace Special Characters
-                        file_name=file_name.replace(":","_")
-                        file_name=file_name.replace("*","_")
-                        file_name=file_name.replace("\\","_")
-                        file_name=file_name.replace("/","_")
+                        if type(file_name) == int or type(file_name) == float:
+                            # if filename is numeric
+                            file_name = str(file_name)
+                        else:
+                            #Replace Special Characters
+                            file_name=file_name.replace(":","_")
+                            file_name=file_name.replace("*","_")
+                            file_name=file_name.replace("\\","_")
+                            file_name=file_name.replace("/","_")
 
                     
                         filePath=self.path + "\\" + file_name

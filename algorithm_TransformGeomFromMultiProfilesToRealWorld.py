@@ -422,14 +422,14 @@ class TransformToProfil_PointsForAllLines(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return self.tr('points_bore_axis_all_baselines')
+        return self.tr('reverse_to_real_world_all_baselines')
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Points (incl. Bore Axis) All Baselines')
+        return self.tr('Reverse To Real World All Baselines')
 
 
     def shortHelpString(self):

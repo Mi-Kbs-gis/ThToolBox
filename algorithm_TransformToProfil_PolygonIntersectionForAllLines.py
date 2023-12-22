@@ -218,7 +218,7 @@ class TransformToProfil_PolygonIntersectionForAllLines(QgsProcessingAlgorithm):
             #if False:
             #feedback.pushInfo( "Selection " + str( polygonLayer.selectedFeatureCount() ) + " Objects"  )
             feedback.pushInfo("Counter: " + str(counter) )
-            gradient_features = None
+            #gradient_features = None
             try:
                 gradient_features = self.runPolygonIntersection( polygonLayer, baseLineLayer, rasterLayer, ueberhoehung, outputGeomType, context, feedback)
                 count=0

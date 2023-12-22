@@ -210,9 +210,9 @@ class TransformToProfil_LineIntersectionForAllLines(QgsProcessingAlgorithm):
                     for grFeature in profil_features:
                         #feedback.pushInfo("Type: " + str(type(grFeature)) )
                         if not str(type(grFeature)) == "<class 'qgis._core.QgsFeature'>":
-                            feedback.pushInfo("Abbruch Type: " + str(type(grFeature)) )
+                            feedback.pushInfo("Feature is valid?:" + str( grFeature.isValid() ) +"; Type: " + str(type(grFeature)) + "; has Geometry ?: "+ str( grFeature.hasGeometry() ) )
                             break
-                        feedback.pushInfo("Abbruch Type: " + str( grFeature.attributes() ) )
+                        feedback.pushInfo("attributes: " + str( grFeature.attributes() ) )
 
                         newFeature = QgsFeature( fields )
                         attrs = grFeature.attributes()

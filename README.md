@@ -21,8 +21,14 @@
 <p>Returns a table with entrys for each file in a directory.</p>
 <p>Include some file properties.</p>
 </ol>
+<h3>File Transfer By Table</h3>
+<ol>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/FileTransferByTable_Logo"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/Files2Table_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/Files2Table_Logo.png" style="max-width:100%;"></a></p>
+<p>Algorithm perfomrs a file transfer, which is defined via source and target filelinks a table or Layer</p>
+<p>There is also a functionality for overwriting and backup of existing files.</p>
 </ol>
-<h2>To Profile Coordinates (Cross Section)</h2>
+</ol>
+<h2>To Profile Coordinates (Cross Section Geometrys)</h2>
 <ol>
 <p>Geometrys would be transformed to a linear referencing by a baseline.</p>
 
@@ -30,13 +36,24 @@
 <ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Gradient_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Gradient_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_Gradient_Logo.png" style="max-width:100%;"></a></p>
 <p>Transforms a single Line to profile coordinates with considering of elevation.</p>
-<p>On Raster NoDATA-Values, the profile elevation where set to 0.</p>
+<p>Raster NoDATA, zero or negative values can be excluded in the result</p>
+<p>Kinked base lines are permitted and will be fully processed.</p>
 <p>Select a line feature or use an one feature layer as Baseline.</p>
 </ol>
 <h3>Line - Baseline Intersections</h3>
 <ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" style="max-width:100%;"></a></p>
 <p>Get the intersections from a line layer with the baseline and transform them to profile coordinates.</p>
+<p>Kinked base lines are permitted and will be fully processed.</p>
+<p>Select a line feature or use an one feature layer as Baseline.</p>
+</ol>
+<h3>Plane - Baseline Intersections (directed points)</h3>
+<ol>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_LineIntersection_Logo.png" style="max-width:100%;"></a></p>
+<p>This function calculates the intersection lines of a series of planes with the vertical cross-section plane. A point plane with horizontal and vertical angles is required for the input planes.</p>
+<p>The horizonal direction means the directional angle from north, measures clockwise in degrees. (north=0°; east=90°; west=270°)</p>
+<p>The vertical angle is measured between horzontal an the direction of fall in degrees. (horizontal=0°; nadir=90°)</p>
+<p>Kinked base lines are permitted and will be fully processed.</p>
 <p>Select a line feature or use an one feature layer as Baseline.</p>
 </ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/ 	TransformToProfil_PolygonIntersection_Logo.png" style="max-width:100%;"></a></p>
@@ -44,6 +61,7 @@
 <ol>
 <p>Get the intersections from a polygon layer with the baseline and transform them to profile coordinates.</p>
 <p>The intersection range can be represented through points or lines.</p>
+<p>Kinked base lines are permitted and will be fully processed.</p>
 <p>Select a line feature or use an one feature layer as Baseline.</p>
 </ol>
 <h3>Points (incl. Bore Axis)</h3>
@@ -57,20 +75,15 @@
 <p>Extrapolation is not supported. Points have to be perpendicular to the baseline.</p>
 <p>To create vertical lines (bore axis) use Dept Start and Dept End from freature attributes.</p>
 <p>Select a line feature or use an one feature layer as Baseline.</p>
-<p>If the baseline is a polylinestring, there could be blind spots.</p>
+<p>Kinked base lines are permitted and will be fully processed. But in this case, points located in the blind spots of a kink point cannot be processed successfully.</p>
 </ol>
 <h3>Reverse To Real World</h3>
 <ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformGeomFromProfileToRealWorld_Logo.png" style="max-width:100%;"></a></p>
 <p>Retransform point, line or polygon geometrys from profile coordinates back to real world geometry with Z values considering a baseline.</p>
+<p>Kinked base lines are permitted and will be fully processed.</p>
+<p>The processing of the offset is constant for an entire geometry object.</p>
 <p>Select a line feature or use an one feature layer as Baseline.</p>
-</ol>
-<h3>Shift Profile Origin (X-Axis)</h3>
-<ol>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png"><img src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png" alt="" data-canonical-src="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/icons/TransformToProfil_ShiftProfileOrigin_Logo.png" style="max-width:100%;"></a></p>
-<p>This function is shifting a profile geometry along x axis.</p>
-<p>The X - Offset is determinated by the distance between the start points of 2 related cross section baselines.</p>
-<p>The relationship between the two baselines is performed by a join based on the profile key.</p>
 </ol>
 </ol>
 <h2>Vector Selection</h2>
@@ -103,10 +116,10 @@
 ### Resources
 <ul>
 <li>Official QGIS plugins page: <a href="https://plugins.qgis.org/plugins/ThToolBox/" rel="nofollow">https://plugins.qgis.org/plugins/ThToolBox/</a></li>
-<li>Documentation (De) <a href="https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf" rel="nofollow">https://github.com/Mi-Kbs-gis/ThToolBox/blob/master/help/ThToolBox_Doc_de.pdf</a></li>
+<li>Documentation (De) <a href="https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf" rel="nofollow">https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf</a></li>
 </ul>
 
 
 ### Authors
 
-* **Michael Kürbs**  - [TLUBN](https://tlubn.thueringen.de/)
+* **Michael Kürbs**  - [TLUBN](http://tlubn-thueringen.de)

@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-02-15'
+__date__ = '2023-12-20'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesanstalt für Umwelt und Geologie (TLUG)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -38,6 +38,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterRasterLayer,
                        QgsProcessingParameterFeatureSink,
                        QgsProcessingParameterNumber,
+                       QgsProcessingParameterBoolean,
                        QgsProject,
                        QgsFeature,
                        QgsFeatureRequest,
@@ -57,6 +58,7 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
     Transforms a single Line to profile coordinates with considering of elevation.
     A baseline can have breakpoints.
     Select one line feature or use an one feature layer as Baseline.
+    NoData, zero and negative Values in the elevation raster can excluded in the final output line.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -67,6 +69,9 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
     INPUTBASELINE = 'INPUTBASELINE'
     INPUTRASTER = 'INPUTRASTER'
     INPUTZFACTOR='INPUTZFACTOR'
+    USE_ZERODATA='USE_ZERODATA'
+    USE_NEGATIVEDATA='USE_NEGATIVEDATA'
+    USE_NODATA='USE_NODATA'
 
     def initAlgorithm(self, config):
         """
@@ -104,6 +109,22 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
             )
         )
 
+        self.addParameter(QgsProcessingParameterBoolean(
+            self.USE_ZERODATA,
+            self.tr('Use Raster Values = 0'),
+            defaultValue=False,
+        ))
+        self.addParameter(QgsProcessingParameterBoolean(
+            self.USE_NEGATIVEDATA,
+            self.tr('Use Raster Values < 0'),
+            defaultValue=True,
+        ))
+        self.addParameter(QgsProcessingParameterBoolean(
+            self.USE_NODATA,
+            self.tr('Use Raster NoData'),
+            defaultValue=False,
+        ))
+
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
@@ -120,7 +141,18 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
         """
         ueberhoehung = self.parameterAsInt(parameters, self.INPUTZFACTOR, context)
         rasterLayer = self.parameterAsRasterLayer(parameters, self.INPUTRASTER, context)
+        noDataValue = -9999 # defined in TerrainModel()
         vectorLayer= self.parameterAsVectorLayer(parameters, self.INPUTBASELINE, context)
+        use_zerodata = self.parameterAsBoolean(parameters, self.USE_ZERODATA, context)
+        use_nodata = self.parameterAsBoolean(parameters, self.USE_NODATA, context)
+        use_negativeData = self.parameterAsBoolean(parameters, self.USE_NEGATIVEDATA, context)
+        
+        
+        
+        feedback.pushInfo("use_nodata:" + str(use_nodata))
+        feedback.pushInfo("use_negativeData:" + str(use_negativeData))
+        feedback.pushInfo("use_zerodata:" + str(use_zerodata))
+        
         baseLineFeature=None
         baseLine=None
         #Basline Layer must have only 1 Feature
@@ -148,6 +180,8 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
             opResult=baseLine.transform(trafo,QgsCoordinateTransform.ForwardTransform, False)
 
         tm=TerrainModel(rasterLayer, feedback)
+        noDataValue=tm.nodata
+        #feedback.pushInfo("TerrainModel.nodata:" + str(noDataValue))
         lp=LaengsProfil(baseLine, tm, crsProject, feedback) # use baseLine in Projekt.crs
         lp.calc3DProfile()
         
@@ -157,38 +191,23 @@ class TransformToProfil_Gradient(QgsProcessingAlgorithm):
         try:
             total = 100.0 / baseLine.length()
         except:
-            msg = self.tr("Keine Basislinie")
+            msg = self.tr("No Baseline")
             feedback.reportError(msg)
             raise QgsProcessingException(msg)
         
-        #Erzeuge LinienGeometry des Laengsprofils
-        i=0
-        profilLinePoints=[]
-        curStation=0
-        prePointIndex=0
-        curPointIndex=0
-        lastPoint=lp.profilLine3d.vertexAt(0)
-        for pointGeom in lp.profilLine3d.vertices():
+        #bereinige LinienGeometry des Laengsprofils 
+        profilLineFeats=[]
+        try:
+            profilLineFeats = lp.getCleanGradient(baseLineFeature, ueberhoehung, noDataValue, use_nodata, use_zerodata, use_negativeData)
+        except:
+            msg = self.tr("ProfilGradient can not clean on feature " + str(baseLineFeature.id()))
+            feedback.reportError(msg)
            
-            #Station des Punktes im Profil wir berechnet
-            iStation=lp.linearRef.punktEntfernung2D(pointGeom, lastPoint)
-            curStation=curStation + iStation
-            #feedback.pushInfo("curStation:" + str(curStation))
-            #add new vertex in Profil coordinates
-            profilLinePoints.append(QgsPointXY(curStation, pointGeom.z() * ueberhoehung))
-            lastPoint=pointGeom
-            i=i+1
-            # Update the progress bar
-            feedback.setProgress(int(curStation * total))
+        if len(profilLineFeats)>0:
+            for i, profilFeat in enumerate(profilLineFeats):
+                sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
 
-
-        #Erzeuge Feature
-        profilFeat = QgsFeature(baseLineFeature.fields())   
-        profilFeat.setGeometry(QgsGeometry.fromPolylineXY(profilLinePoints))
-        profilFeat.setAttributes(baseLineFeature.attributes())
-
-        # Add a feature in the sink
-        sink.addFeature(profilFeat, QgsFeatureSink.FastInsert)
+            
         feedback.setProgress(int(100))
 
         msgInfo=self.tr("BaseLine was transformed to profile coordinates")

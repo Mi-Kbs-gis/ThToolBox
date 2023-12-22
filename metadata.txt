@@ -4,18 +4,37 @@
 name=ThToolBox
 qgisMinimumVersion=3.0
 description=TLUBN Algorithms (formerly TlugProcessing)
-version=2.11
+version=2.14
 author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
 email=Michael.Kuerbs@tlubn.thueringen.de
 
 about=This is a processing tools collection of the Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN). 
-	<p>File Tools</p>
-	<p>2D -> 3D</p>
-	<p>To Profile Coordinates</p>
-	<p>Vector Seletion</p>
-	<p>Web</p>
-	<p><a href='https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf'>Documentation(DE)</a></p>
-	<p><a href="http://tlubn-thueringen.de">TLUBN</a></p>
+
+	2D -> 3D
+	 -- Attach raster values to line vertices
+	 
+	File Tools
+	 -- File Transfer By Table
+	 -- Files To Table
+	 
+	To Profile Coordinates
+	 -- Line - Baseline Intersections
+	 -- Plane - Baseline Intersections (directed points)
+	 -- Points (incl. Bore Axis)
+	 -- Polygon - Baseline Intersections
+	 -- Raster Gradient
+	 -- Reverse To Real World
+	 -- Shift Profile Origin (X-Axis)
+	 
+	Vector Seletion
+	 -- Select Duplicates
+	 
+	Web
+	 -- Download by Features
+	 -- Store WMS Images By Features
+	 
+	<a href="https://github.com/Mi-Kbs-gis/ThToolBox/raw/master/help/ThToolBox_Doc_de.pdf" title="Documentation(DE)">Documentation(DE)</a>
+	<a href="https://tlubn-thueringen.de" title="TLUBN">TLUBN</a>
 
 tracker=https://github.com/Mi-Kbs-gis/ThToolBox/issues
 repository=https://github.com/Mi-Kbs-gis/ThToolBox
@@ -25,12 +44,22 @@ repository=https://github.com/Mi-Kbs-gis/ThToolBox
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.11 August. 09, 2021
+changelog = 2.14 December 21, 2023
+		- new algorithm "Plane - Baseline Intersections"
+		- BugFix algorithm "Raster Gradient"
+		- algorithm "Raster Gradient All Lines" NoDATA, zero and negative values can be excluded
+	2.13 October 27, 2023
+		- new algorithm "File Transfer By Table"
+		- algorithm "Files To Table" now folders are included in file list
+		- algorithm "Raster Gradient" NoDATA, zero and negative values can be excluded
+	2.12 April 20, 2022
+		- Improvement error messages on algorithm "To Profile Coordinates/Points (incl. Bore Axis)"
+	2.11 August 09, 2021
 		- Improvement reference point World File in algorithm "Store WMS Images By Features"
-	2.10 May. 14, 2020
+	2.10 May 14, 2020
 		- algorithm "Store WMS Images By Features" Error-Responses where saved as XML-Files
 		- Bugfix "Select duplicates"
-	2.9 May. 14, 2019
+	2.9 May 14, 2019
 		- new algorithm "Shift Profile Origin (X-Axis)"
 		- Bugfix "Select duplicates"
 	2.8 Feb. 15, 2019
@@ -80,7 +109,7 @@ changelog = 2.11 August. 09, 2021
 		- First version
 	
 # Tags are comma separated with spaces allowed
-tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Rip, Capture, profile, profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table
+tags=Processing, Vector, Duplicates, Raster, 3D, 2.5D, Point Cloud, Z, Download, Web, WMS, Rip, Capture, profile, profil, Cross Section, Linear Referencing, DEM, Lines, Sample, File List, Table, File Transfer, Move, Copy, Overwrite
 
 homepage=https://github.com/Mi-Kbs-gis/ThToolBox
 category=Analysis
