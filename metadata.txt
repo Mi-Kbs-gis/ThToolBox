@@ -4,7 +4,7 @@
 name=ThToolBox
 qgisMinimumVersion=3.0
 description=TLUBN Algorithms (formerly TlugProcessing)
-version=2.14
+version=2.15
 author=Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
 email=Michael.Kuerbs@tlubn.thueringen.de
 
@@ -44,7 +44,9 @@ repository=https://github.com/Mi-Kbs-gis/ThToolBox
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog = 2.14 December 21, 2023
+changelog = 2.15 December 21, 2023
+		- Bugfix algorithm "Polygon - Baseline Intersections"
+	2.14 December 21, 2023
 		- new algorithm "Plane - Baseline Intersections"
 		- BugFix algorithm "Raster Gradient"
 		- algorithm "Raster Gradient All Lines" NoDATA, zero and negative values can be excluded

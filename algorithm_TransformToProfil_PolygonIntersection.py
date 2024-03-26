@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2019-02-15'
+__date__ = '2024-03-26'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -221,12 +221,7 @@ class TransformToProfil_PolygonIntersection(QgsProcessingAlgorithm):
                         featZ = QgsFeature(schnittLineFeat)
                         linRef = LinearReferencingMaschine(schnittLineFeat.geometry(), crsProject, feedback)
                         line3D = self.calc3DProfile(linRef, tm, crsProject)
-                        ###########################################
-                        
-                        
-                        
-                        ###########################################
-                        #featZ.setGeometry(line3D)
+                        featZ.setGeometry(line3D)
                         featZ.setAttributes(schnittLineFeat.attributes())
                         featuresWithZ.append(featZ)
 
