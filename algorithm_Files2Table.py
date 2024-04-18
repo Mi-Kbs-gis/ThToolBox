@@ -6,7 +6,7 @@
  TLUG Algorithms
                               -------------------
         begin                : 2018-10-05
-        copyright            : (C) 2017 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
+        copyright            : (C) 2018 by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)
         email                : Michael.Kuerbs@tlubn.thueringen.de
  ***************************************************************************/
 
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2023-04-06'
+__date__ = '2024-04-17'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -48,7 +48,8 @@ from qgis.core import (QgsProcessing,
                        QgsFeature,
                        QgsField,
                        QgsFields,
-                       QgsProcessingException)
+                       QgsProcessingException,
+                       QgsWkbTypes)
 from PyQt5.QtGui import QIcon
 
 class Files2Table(QgsProcessingAlgorithm):
@@ -121,7 +122,7 @@ class Files2Table(QgsProcessingAlgorithm):
         crsProject=QgsProject.instance().crs()         
         
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                context, fields, 100, crsProject) #100=WKBUnknown
+                context, fields, QgsWkbTypes.NoGeometry, crsProject) #100=WKBUnknown
         countFiles=0
 
 #        try:
