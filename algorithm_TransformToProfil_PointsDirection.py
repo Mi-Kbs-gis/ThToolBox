@@ -2,7 +2,7 @@
 """
 /***************************************************************************
  ThToolBox
-                                 TransformToProfil_Points
+                                 TransformToProfil_PointsDirection
  TLUG Algorithms
                               -------------------
         begin                : 2018-08-27
@@ -22,7 +22,7 @@
 """
 
 __author__ = 'Michael Kürbs'
-__date__ = '2023-12-20'
+__date__ = '2024-12-16'
 __copyright__ = '(C) 2018 by Michael Kürbs by Thüringer Landesamt für Umwelt, Bergbau und Naturschutz (TLUBN)'
 
 # This will get replaced with a git SHA1 when you do a git archive
@@ -41,6 +41,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFeatureSink,
                        QgsProcessingParameterNumber,
                        QgsProcessingParameterExpression,
+                       QgsProcessingParameterEnum,
                        QgsExpression,
                        QgsExpressionContext,
                        QgsProject,
@@ -61,6 +62,7 @@ from PyQt5.QtGui import QIcon
 import os
 import numpy as np
 
+
 class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
     """
     This function calculates the intersection lines of a series of planes with the vertical cross-section plane.
@@ -68,8 +70,12 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
     For each directed point objekt it will caculate a intersection line on each base line segment.
 
     The planes are defined by a reference point with a horizontal direction and a vertical angle.
-    The horizonal direction means the directional angle from north, measures clockwise in degrees.(north=0°; east=90°; west=270°)
-    The vertical angle is measured between the horizontal an the direction of fall in degrees. (horizontal=0°; nadir=90°)
+    The parameter <b>horizonal direction</b> means the directional angle from north, measures clockwise in degrees.(north=0°; east=90°; west=270°)
+    The parameter <b>azimut</b> means the vertical angle. This is measured between the horizontal an the direction of fall in degrees. (horizontal=0°; nadir=90°)
+    
+    The parameter <b>Line Length Regulation Method</b> regulates the length of the intersection line in the cross section plane.
+    The parameter <b>Line Length Regulation Method Value</b> represents the numeric Value of the choosen Line Length Regulation Method.
+    
     Kinked base lines are permitted and will be fully processed.
     """
 
@@ -86,7 +92,8 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
     INPUTZFIELD='INPUTZFIELD'
     AZIMUTH='AZIMUTH'
     HZ_DIRECTION='HZ_DIRECTION'
-    ENDINGELEVATIONLEVEL='ENDINGELEVATIONLEVEL'
+    LINELENGTHMETHOD='LINELENGTHMETHOD'
+    LINELENGTHMETHODVALUE='LINELENGTHMETHODVALUE'
 
 
     def initAlgorithm(self, config):
@@ -156,7 +163,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                 self.tr('horizontal direction'),
                 defaultValue=None,
                 parentLayerParameterName=self.INPUTPOINTLAYER,
-                optional=True
+                optional=False
             )
         )
         self.addParameter(
@@ -165,19 +172,29 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                 self.tr('azimuth'),
                 defaultValue=None,
                 parentLayerParameterName=self.INPUTPOINTLAYER,
-                optional=True
+                optional=False
+            )
+        )
+        
+        lineRegulations = [self.tr('Maximum Length'),
+             self.tr('Minimal Elevation Level')]   
+             
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                self.LINELENGTHMETHOD,
+                self.tr('Line Length Regulation Method'),
+                options=lineRegulations, defaultValue=0
             )
         )
         
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.ENDINGELEVATIONLEVEL,
-                self.tr('Ending Elevation Level'),
+                self.LINELENGTHMETHODVALUE,
+                self.tr('... Line Length Regulation Method - Value'),
                 type=QgsProcessingParameterNumber.Double,
                 defaultValue=0,
-                optional=True,
-                minValue=0,
-                maxValue=100
+                optional=False,
+
                 
             )
         )
@@ -204,8 +221,15 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
         zFieldName =  self.parameterAsString(parameters, self.INPUTZFIELD, context)
         hz_directionFieldName =  self.parameterAsString(parameters, self.HZ_DIRECTION, context)
         hoehenWinkelFieldName = self.parameterAsString( parameters, self.AZIMUTH, context )
-        endingElevationLevel = self.parameterAsDouble(parameters, self.ENDINGELEVATIONLEVEL, context)
+        lineLengthMethod = self.parameterAsEnum(parameters, self.LINELENGTHMETHOD, context)
+        lineLengthMethodValue = self.parameterAsDouble(parameters, self.LINELENGTHMETHODVALUE, context)
         bufferWidth = self.parameterAsDouble(parameters, self.INPUTBUFFER, context)
+        endingElevationLevel = -50000  #default
+        maxLineLength = 1000000 #default
+        if lineLengthMethod == 0:
+            maxLineLength = lineLengthMethodValue
+        else:
+            endingElevationLevel=lineLengthMethodValue
 
         baseLine=None
         #Basline Layer must have only 1 Feature
@@ -296,6 +320,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
         sinkFields=pointLayer.fields()
         
         wkbTyp = QgsWkbTypes.LineString
+        sinkFields.append(QgsField("z_reference", QVariant.Double))
         sinkFields.append(QgsField("station", QVariant.Double))
         sinkFields.append(QgsField("abstand", QVariant.Double))
         sinkFields.append(QgsField("z_factor", QVariant.Double))
@@ -345,7 +370,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
             
             
             #Plane of the directed point
-            pointDirectionVector = self.getVectorFromAngles(hzDirectionGrad, zenitWinkelGrad, feedback)
+            pointDirectionVector = self.getVectorFromAngles( hzDirectionGrad, zenitWinkelGrad, feedback )
 
             pointOrthoVector = [pointDirectionVector[1], -pointDirectionVector[0], 0] # Vector regtangular to the pointDirectionVector [deltaY, -deltaX, 0]
             
@@ -376,14 +401,15 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
             #feedback.pushInfo('  object_planeNormal: X:'+ str( round(object_planeNormal[0],2))+' Y:'+ str( round(object_planeNormal[1],2))+ '  Z:'+ str( round(object_planeNormal[2],2)) )
             #feedback.pushInfo('  object_plane: X:'+ str( round(object_plane[0],2))+' Y:'+ str( round(object_plane[1],2))+ '  Z:'+ str( round(object_plane[2],2))+ '  D:'+ str( round(object_plane[3],2)) )
 
-            ptGeom=QgsPoint(round(refPoint[0],2), round(refPoint[1],2))
+            ptGeom=QgsPoint( round( refPoint[0],2), round( refPoint[1],2) )
             object_station, object_abstand=lp.linearRef.transformToLineCoords( ptGeom ) 
 
-            
-            #Berechne die Schnittlinie mit der Ebene mit der Ebene jedes Baselinesegents
+            #Calculate the intersection line with the plane of each baseline segment
+            #Berechne die Schnittlinie mit der Ebene jedes Baselinesegents
             intersectionLinePoints=[]
             intersectionProfileLines=[]
             schnittLinienList3D=[]
+            overLenRest = 1 # Wird dynamisch berechnet um bei einer Maximallänge der Ergebnislinie sich zu merken ob beim vorherigen Liniensegment die Maximallänge schon errreichtb wurde
             for i, line in enumerate(lp.linearRef.lineSegments):
                 useLineSegment=True
                 linePoints=lp.linearRef.getVertices(line)
@@ -392,8 +418,17 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                     #Error
                     pass
                 else:
+
+
+                    lotPunkt=lp.linearRef.getLotPunkt(ptGeom, baseLine)
+                    pLot =self.pointOnPlane_fixXY(object_plane, lotPunkt.x(), lotPunkt.y(), feedback)
+                    zLotpunkt=float(round(pLot[2],2))
+                    
+                    feedback.pushInfo('lotPunkt: '+ str( lotPunkt))
+                    feedback.pushInfo('pLot: '+ str( pLot))
                 
                     p0=[linePoints[0].x(), linePoints[0].y(), pRef.z()]
+                    feedback.pushInfo('p0: '+ str( p0))
                 
                     feedback.pushInfo('---------' + str(i) + '. base line segment of the ------------------------------')
                     lineVector=self.getVectorFromLineSegment(linePoints, feedback)
@@ -408,18 +443,23 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                     deltaZi = 0
 
                     baseline_planeNormal=[deltaXi/deltaXi, deltaYi/deltaXi, deltaZi/deltaXi ] # Normal of the BaseLine Plane x=1
-                    baseline_plane = self.ebenenGleichung_parameterForm( p0, baseline_planeNormal, feedback) # hier wir die Höhe des Referenz-Punktobjektes genutzt
+
+                    baseline_plane = self.ebenenGleichung_parameterForm( pLot, baseline_planeNormal, feedback) # hier wird Der Lotpunkt eingesetzt
+
+                    #baseline_plane = self.ebenenGleichung_parameterForm( p0, baseline_planeNormal, feedback) # hier wir die Höhe des Referenz-Punktobjektes genutzt
 
                     # x1, y1, z1, d1, normal1 = object_plane
                     # x2, y2, z2, d2, normal2 = baseline_plane
 
                     #feedback.pushInfo('baseline_planeNormal: X:'+ str( round(baseline_planeNormal[0],2))+' Y:'+ str( round(baseline_planeNormal[1],2))+ '  Z:'+ str( round(baseline_planeNormal[2],2)) )
                     #feedback.pushInfo('baseline_plane: '+ str( baseline_plane))
-
+                    
+                    
 
 
                     
-                    #get 3D Point an the object plane for the 2D kniked points of the base line segment
+                    #get 3D Point an the object plane for the 2D kinked points of the base line segment
+                    #liefert einen 3D-Punkt auf der Objekt-Ebene an dem Knickpunkt der Profilschnittlinie
                     p1 = self.pointOnPlane_fixXY(object_plane, linePoints[0].x(), linePoints[0].y(), feedback)
                     p2 = self.pointOnPlane_fixXY(object_plane, linePoints[1].x(), linePoints[1].y(), feedback)
                     #feedback.pushInfo('base line ' + str( i) +' intersection p1: '+ str(p1)  )                    
@@ -429,7 +469,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                     z1OutSide=0
                     z2OutSide=0
 
-
+                    # the endingElevationLevel can be upside or downsid to the elevation of the source point
                     #check position of the intersection line in the base line segment plane
                     if z1-endingElevationLevel < 0: #untere Grenze der Ebene wird geschnitten # lower border intersected
                         z1OutSide=-1
@@ -450,7 +490,8 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                     # if -1 calculate intersection point on Z=endingElevationLevel
                     # if +1 calculate intersection point on Z=pRef.z()
                     
-                    pZ=pRef.z() #Einsetzen es kann mit 2 Variablen weitergearbeitet werden --> muss dann der Geländehöhe entsprechen
+                    pZ=zLotpunkt #Einsetzen es kann mit 2 Variablen weitergearbeitet werden --> muss dann der Höhe des Lotpunktes(in Objektebene) entsprechen
+                    #pZ=pRef.z() #Einsetzen es kann mit 2 Variablen weitergearbeitet werden --> muss dann der Geländehöhe des Referenzpunktes entsprechen
 
                     
                     #feedback.pushInfo('1 point object: ')
@@ -464,22 +505,23 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                     elif z1OutSide==-1 and z2OutSide ==0: #p1 untere Grenze der Ebene wird geschnitten
                         p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, endingElevationLevel, feedback)
                     elif z1OutSide==1 and z2OutSide ==0: #p1 obere Grenze der Ebene wird geschnitten
-                        p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pRef.z(), feedback)
+                        p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pZ, feedback)
                         
                     elif z1OutSide==0 and z2OutSide ==-1: #p2 untere Grenze der Ebene wird geschnitten
                         p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, endingElevationLevel, feedback)
                     elif z1OutSide==0 and z2OutSide ==1: #p2 obere Grenze der Ebene wird geschnitten
-                        p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pRef.z(), feedback)  
+                        p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pZ, feedback)  
                         
                     elif z1OutSide==-1 and z2OutSide ==1: #beide schneiden p1 unten p2 oben              
                         p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, endingElevationLevel, feedback)        
-                        p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pRef.z(), feedback)                          
+                        p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pZ, feedback)                          
                     elif z1OutSide==1 and z2OutSide ==-1: #beide schneiden p1 oben p2 unten              
-                        p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pRef.z(), feedback)        
+                        p1=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, pZ, feedback)        
                         p2=self.pointOnIntersectionLine_planes_fixZ(object_plane, baseline_plane, endingElevationLevel, feedback)                    
                     elif z1OutSide==0 and z2OutSide ==0:
                         pass #keep 
-
+                        
+                        
                     if useLineSegment == True:
                         intersectionLinePoints = []
                         intersectionLinePoints.append(QgsPoint(p1[0], p1[1], p1[2]))
@@ -492,18 +534,30 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
                         stationP2, abstandP2=lp.linearRef.transformToLineCoords( QgsPoint(p2[0], p2[1], p2[2]) )
                         profileLinePoints=[]
                         profileLinePoints.append( QgsPoint(stationP1, p1[2]* ueberhoehung) )
-                        profileLinePoints.append( QgsPoint(stationP2, p2[2]* ueberhoehung) )
+                        if overLenRest > 0:
+                            pktN=QgsPoint(stationP2, p2[2])
+                            pkt0=QgsPoint(object_station,zLotpunkt)
+                            
+                            stat,h, isBetween, overLen = self.pointOnIntersectionLine_planes_fixDistance( pkt0, pktN, maxLineLength, feedback)
+                            overLenRest = overLen
+                            
+                            if isBetween == True:
+                                profileLinePoints.append( QgsPoint(stat, h * ueberhoehung) )
+                            else:
+                                profileLinePoints.append( QgsPoint(stationP2, p2[2]* ueberhoehung) )
+
                         profilLineGeom=QgsGeometry().fromPolyline(profileLinePoints) 
                         intersectionProfileLines.append( profilLineGeom )
                         #feedback.pushInfo('profile line on base line plane ' + str( i) +': '+ profilLineGeom.asWkt()  )
 
                         profilFeat = QgsFeature(srcFeat.fields())   
                         #muss fuer jeden Geometrityp gehen
-                        profilFeat.setGeometry(profilLineGeom)
+                        profilFeat.setGeometry( profilLineGeom )
                         attrs=srcFeat.attributes()
                         #add station and abstand
-                        attrs.append( -1) #profilItem.station )
-                        attrs.append( object_abstand )#profilItem.abstand )
+                        attrs.append( zLotpunkt ) #Höhe des Referenzpunktes
+                        attrs.append( round( object_station,2) ) #station des lotpunktes
+                        attrs.append( round( object_abstand,2) )#abstand zur schnittlinie)
                         attrs.append( ueberhoehung )
                         profilFeat.setAttributes( attrs )
                         # Add a feature in the sink
@@ -576,53 +630,6 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
     def createInstance(self):
         return TransformToProfil_PointsDirection()
 
-    def createBohrungSchichtLineFeatures(self, pointfeaturesWithZ, tiefeVonIdx, tiefeBisIdx, richtungHz, azimut, feedback):
-        featuresWithZ=[]
-        for current, srcFeat in enumerate(pointfeaturesWithZ):
-            # Stop the algorithm if cancel button has been clicked
-            if feedback.isCanceled():
-                break
-
-            #create a Line Geometry
-            if tiefeVonIdx==-1:
-                tiefeVon=srcFeat.geometry().vertexAt(0).z()
-                tiefeVon=0
-            
-            else:
-                tiefeVon=srcFeat.attribute(tiefeVonIdx)
-            if tiefeBisIdx==-1:
-                tiefeBis=srcFeat.geometry().vertexAt(0).z()
-                tiefeBis=0
-            
-            else:
-                tiefeBis=srcFeat.attribute(tiefeBisIdx)         
-            
-            #tiefeBis=srcFeat.attribute(tiefeBisIdx)
-            if tiefeBis is None or str(tiefeBis)=="" or str(tiefeBis)=="NULL":
-                feld = srcFeat.fields().field(tiefeBisIdx)
-                feedback.reportError("Depth End: "+str(tiefeBis))
-                feedback.reportError("Feature: "+str(srcFeat.id()))
-                feedback.reportError("Attributes: "+str(srcFeat.attributes()))
-                tiefeBis=0
-                raise QgsProcessingException('Depth End value on field    ' + feld.name() + '       is empty!')
-            if tiefeVon is None or str(tiefeVon)=="" or str(tiefeVon)=="NULL":
-                feld = srcFeat.fields().field(tiefeVonIdx)
-                feedback.reportError("Depth Start: " + str(tiefeVon))
-                feedback.reportError("Feature: "+str(srcFeat.id()))
-                feedback.reportError("Attributes: "+str(srcFeat.attributes()))
-                tiefeVon=0
-                raise QgsProcessingException('Depth Start value on field   '+ feld.name() + '      is empty!')
-            
-            feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
-            inputGeom = srcFeat.geometry().vertexAt(0)
-            pVon=self.polarerAnhaenger3D(inputGeom,  tiefeVon, richtungHz, azimut, feedback)
-            pBis=self.polarerAnhaenger3D(inputGeom,  tiefeBis, richtungHz, azimut, feedback)
-            lineZ=QgsGeometry.fromPolyline([pVon, pBis])
-            zFeat=QgsFeature(srcFeat.fields())
-            zFeat.setGeometry(lineZ)
-            zFeat.setAttributes(srcFeat.attributes())
-            featuresWithZ.append(zFeat)
-        return featuresWithZ
 
     def getVectorFromLineSegment(self, linePoints, feedback): # linePoints must have len = 2 
         p0=linePoints[0] # Start Point of current baseline Segment
@@ -648,7 +655,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
         sHz = math.sin( zenitWinkelRad ) # *s
         deltaX = math.sin( hzDirectionRad ) * sHz 
         deltaY = math.cos( hzDirectionRad ) * sHz
-        deltaZ = math.cos( zenitWinkelRad ) # *s ?? tan(hoehenwinkel)
+        deltaZ = math.cos( zenitWinkelRad ) # *s 
         pointDirectionVector = [deltaX, deltaY, deltaZ]
         pointDirectionVectorOne = pointDirectionVector / np.linalg.norm(pointDirectionVector) 
         return pointDirectionVectorOne
@@ -720,7 +727,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
 
     #Ergebnis ist ein Array [pX, pY, pZ] mit den Punktkoordinaten 
     def pointOnIntersectionLine_planes_fixZ(self,  ebene1, ebene2, pZ, feedback): # Plane Formula in Parameterform                        
-        #this function caculates a point on a plane with a given z value
+        #this function calculates a point on a plane with a given z value
 
         x1, y1, z1, d1, normal1 = ebene1
         x2, y2, z2, d2, normal2 = ebene2
@@ -737,7 +744,7 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
         
     #Ergebnis ist ein Array [pX, pY, pZ] mit den Punktkoordinaten 
     def pointOnPlane_fixXY(self, ebene1,  pX, pY, feedback): # Plane Formula in Parameterform                        
-        #this function caculates a point on an plan with given values for x and y
+        #this function calculates a point on an plan with given values for x and y
         x1, y1, z1, d1, normal1 = ebene1
 
         #z wird in Gleichungen eingesetzt und auf die rechte Seite der Gleichung verschoben
@@ -746,5 +753,24 @@ class TransformToProfil_PointsDirection(QgsProcessingAlgorithm):
        
         pZ = (d1 -x1x - y1y)/z1
         #feedback.pushInfo('pointOnPlane_fixXY --> Z: ' + str( pZ ))
+        #pLot = pLotnp.astype(np.double)
         return [pX, pY, pZ]
         
+    #Ergebnis ist ein Array [pNx, pNy, isBetween, overLen] 
+    def pointOnIntersectionLine_planes_fixDistance(self,  p0, p1, distance, feedback): # Plane Formula in Parameterform                        
+        #this function calculates a point on line with a given distance
+        
+        dx=p1.x()-p0.x()
+        dy=p1.y()-p0.y()
+        
+        ds= math.sqrt(dx*dx + dy*dy)
+        m = distance / ds
+        
+        pNx= p0.x() + m * dx
+        pNy= p0.y() + m * dy
+        isBetween = False
+        if distance <=ds:
+            isBetween=True
+        overLen = distance - ds
+        
+        return pNx, pNy, isBetween, overLen

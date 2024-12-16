@@ -51,6 +51,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingException)
 from PyQt5.QtGui import QIcon
 from shutil import copyfile, copytree, move
+from pathlib import Path
 from PyQt5.QtCore import QFileInfo
 
 class FileTransferByTable(QgsProcessingAlgorithm):
@@ -227,6 +228,8 @@ class FileTransferByTable(QgsProcessingAlgorithm):
             try:
                 #create Target value from Expression
                 targetPath=expr_tar.evaluate(exprContext)
+                if targetPath[-1] == '\\' or targetPath[-1] == '/':
+                    targetPath=targetPath[:-1] # remove last character if its a slash or backslash
 
             except Exception as err:
                 msg = "Error while run Target Expression" + str( expr_tar.expression() ) + " on feature " + str( feature.attributes() ) + ": " + str( err.args ) + ";" + str( repr( err ) ) 
@@ -238,12 +241,16 @@ class FileTransferByTable(QgsProcessingAlgorithm):
             srcFile=QFileInfo(sourcePath)
             newFile = None
             newFileFolder = None
-            try:
+            if str(targetPath) == 'NULL' or str(targetPath) == 'None' or str(targetPath) == '' or len(str(targetPath)) ==0:
+                feedback.reportError('There are NULL values on the defined taget path expression: ' + str( expr_tar.expression() ))
+                raise Exception
+            try:            
+
                 newFile=QFileInfo(targetPath)
                 newFileFolder = QFileInfo( newFile.absoluteDir().absolutePath() )
-            except Error as err:
+            except Exception as err:
                 errorTxt=errorTxt + 'Target File not defined ' #Tagetfile nicht definert
-                feedback.reportError('Target File not defined on file' + sourcePath)
+                feedback.reportError('Target File not defined on file:' + targetPath)
                 hasError = True
                 
             if srcFile.exists() == False:
@@ -256,7 +263,16 @@ class FileTransferByTable(QgsProcessingAlgorithm):
                 if newFileFolder.exists() == False:
                     mode = 0o666
                     try:
-                        os.mkdir(newFile.absoluteDir().absolutePath(), mode)
+                        feedback.pushInfo('Path: ' + newFile.absoluteDir().absolutePath() + '  File Abspath: ' + targetPath)
+
+                        feedback.pushInfo('mkdir(' + newFile.absoluteDir().absolutePath()+')')
+                        
+                        #create dirs recursivly
+                        path = Path(newFile.absoluteDir().absolutePath())
+                        path.mkdir(parents=True, exist_ok=True)
+                        
+                        #if newFile.absoluteDir().absolutePath() != newFile.absoluteDir():
+                        #    os.mkdir(newFile.absoluteDir().absolutePath(), mode)
                     except FileNotFoundError as err:
                         msg = "Target Directory can not be created! May be the root directory does not exist. " + newFile.absoluteDir().absolutePath() + ' for file '+  srcFile.fileName()#Zielverzeichnis existiert nicht 
                         errorTxt=errorTxt + msg

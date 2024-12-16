@@ -47,6 +47,7 @@ from .algorithm_TransformToProfil_PointsForAllLines import TransformToProfil_Poi
 from .algorithm_TransformToProfil_GradientForAllLines import TransformToProfil_GradientForAllLines
 from .algorithm_TransformToProfil_PolygonIntersectionForAllLines import TransformToProfil_PolygonIntersectionForAllLines
 from .algorithm_TransformToProfil_LineIntersectionForAllLines import TransformToProfil_LineIntersectionForAllLines
+from .algorithm_TransformToProfil_PointsForAllLinesDataDriven import TransformToProfil_PointsForAllLinesDataDriven
 
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator, qVersion
 import os
@@ -104,6 +105,8 @@ class ThToolBoxPluginProvider(QgsProcessingProvider):
         self.alglist.append( TransformToProfil_ShiftProfileOrigin() )
         self.alglist.append( Files2Table() )
         self.alglist.append( FileTransferByTable() )
+        
+        self.alglist.append(TransformToProfil_PointsForAllLinesDataDriven())
 
     def unload(self):
         """

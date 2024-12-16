@@ -95,7 +95,7 @@ class FileDownload(QgsProcessingAlgorithm):
             QgsProcessingParameterVectorLayer(
                 self.INPUT_LAYER,
                 self.tr('Input Vector Layer'),
-                [QgsProcessing.TypeVectorAnyGeometry]
+                [QgsProcessing.TypeVector]
             )
         )
         self.addParameter(

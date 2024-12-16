@@ -482,7 +482,7 @@ class TransformToProfil_Points(QgsProcessingAlgorithm):
                 tiefeVon=0
                 raise QgsProcessingException('Depth Start value on field   '+ feld.name() + '      is empty!')
             
-            feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
+            #feedback.pushInfo(str(tiefeVon)+"-->"+ str(tiefeBis) +":"+ str(srcFeat.attributes()))
             inputGeom = srcFeat.geometry().vertexAt(0)
             pVon=self.polarerAnhaenger3D(inputGeom,  tiefeVon, richtungHz, azimut, feedback)
             pBis=self.polarerAnhaenger3D(inputGeom,  tiefeBis, richtungHz, azimut, feedback)
